@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import type { CashflowItem } from '@/types/cashflow'
 import { Button } from '@/components/ui/button'
 import { CashflowTable } from './cashflow-table'
@@ -28,10 +29,11 @@ export function CashflowPageClient({ items }: CashflowPageClientProps) {
 
     try {
       await deleteCashflowItem(id)
+      toast.success('삭제되었습니다.')
       router.refresh()
     } catch (error) {
       console.error('Failed to delete item:', error)
-      alert('삭제에 실패했습니다.')
+      toast.error('삭제에 실패했습니다.')
     }
   }
 

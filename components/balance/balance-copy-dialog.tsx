@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
 import type { BalanceItem, CreateBalanceItemInput } from '@/types/balance'
 import {
   Dialog,
@@ -114,7 +115,7 @@ export function BalanceCopyDialog({
       }))
 
     if (selectedItems.length === 0) {
-      alert('최소 1개 이상의 항목을 선택해주세요.')
+      toast.error('최소 1개 이상의 항목을 선택해주세요.')
       return
     }
 
@@ -144,12 +145,13 @@ export function BalanceCopyDialog({
         true // overwrite = true
       )
 
+      toast.success('복사되었습니다.')
       router.push(`/balance?year=${result.year}&month=${result.month}`)
       router.refresh()
       onOpenChange(false)
     } catch (error: any) {
       console.error('Failed to copy snapshot:', error)
-      alert(error.message || '복사에 실패했습니다.')
+      toast.error(error.message || '복사에 실패했습니다.')
     } finally {
       setLoading(false)
     }

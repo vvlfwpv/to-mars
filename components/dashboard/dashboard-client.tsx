@@ -17,6 +17,18 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import {
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+} from 'recharts'
 import type { BalanceSnapshotWithItems } from '@/types/balance'
 import type { InvestmentSnapshotWithItems } from '@/types/investment'
 
@@ -67,6 +79,7 @@ export function DashboardClient({
       )
 
       return {
+        name: `${snapshot.year}-${snapshot.month}`,
         year: snapshot.year,
         month: snapshot.month,
         totalAssets,
@@ -92,6 +105,7 @@ export function DashboardClient({
         totalPrincipal > 0 ? (profitLoss / totalPrincipal) * 100 : 0
 
       return {
+        name: `${snapshot.year}-${snapshot.month}`,
         year: snapshot.year,
         month: snapshot.month,
         totalPrincipal,
@@ -174,32 +188,32 @@ export function DashboardClient({
           {balanceData.length > 0 && (
             <div className="rounded-md border p-6">
               <h3 className="text-lg font-semibold mb-4">순자산 추이</h3>
-              <div className="h-64 flex items-end justify-between gap-2">
-                {balanceData.slice().reverse().map((data, index) => {
-                  const maxValue = Math.max(...balanceData.map((d) => d.netAssets))
-                  const heightPercent = (data.netAssets / maxValue) * 100
-
-                  return (
-                    <div
-                      key={`${data.year}-${data.month}`}
-                      className="flex-1 flex flex-col items-center gap-2"
-                    >
-                      <div className="w-full flex flex-col items-center">
-                        <span className="text-xs font-mono mb-1">
-                          {(data.netAssets / 1000000).toFixed(1)}M
-                        </span>
-                        <div
-                          className="w-full bg-blue-500 rounded-t"
-                          style={{ height: `${heightPercent}%` }}
-                        />
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {data.month}월
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={balanceData.slice().reverse()}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12 }}
+                    tickFormatter={(value) => `${(value / 1000000).toFixed(0)}M`}
+                  />
+                  <Tooltip
+                    formatter={(value) => (typeof value === 'number' ? value.toLocaleString() + '원' : '')}
+                    labelStyle={{ color: '#000' }}
+                  />
+                  <Legend />
+                  <Line
+                    type="monotone"
+                    dataKey="netAssets"
+                    name="순자산"
+                    stroke="#3b82f6"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
           )}
         </TabsContent>
@@ -261,39 +275,29 @@ export function DashboardClient({
           {investmentData.length > 0 && (
             <div className="rounded-md border p-6">
               <h3 className="text-lg font-semibold mb-4">수익률 추이</h3>
-              <div className="h-64 flex items-end justify-between gap-2">
-                {investmentData.slice().reverse().map((data) => {
-                  const isPositive = data.profitRate >= 0
-                  const heightPercent = Math.min(Math.abs(data.profitRate) * 2, 100)
-
-                  return (
-                    <div
-                      key={`${data.year}-${data.month}`}
-                      className="flex-1 flex flex-col items-center gap-2"
-                    >
-                      <div className="w-full flex flex-col items-center">
-                        <span
-                          className={`text-xs font-mono mb-1 ${
-                            isPositive ? 'text-green-600' : 'text-red-600'
-                          }`}
-                        >
-                          {isPositive ? '+' : ''}
-                          {data.profitRate.toFixed(1)}%
-                        </span>
-                        <div
-                          className={`w-full rounded-t ${
-                            isPositive ? 'bg-green-500' : 'bg-red-500'
-                          }`}
-                          style={{ height: `${heightPercent}%` }}
-                        />
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {data.month}월
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={investmentData.slice().reverse()}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fontSize: 12 }}
+                  />
+                  <YAxis
+                    tick={{ fontSize: 12 }}
+                    tickFormatter={(value) => `${value.toFixed(0)}%`}
+                  />
+                  <Tooltip
+                    formatter={(value) => (typeof value === 'number' ? `${value.toFixed(2)}%` : '')}
+                    labelStyle={{ color: '#000' }}
+                  />
+                  <Legend />
+                  <Bar
+                    dataKey="profitRate"
+                    name="수익률"
+                    fill="#10b981"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           )}
         </TabsContent>

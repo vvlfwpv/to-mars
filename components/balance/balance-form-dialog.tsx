@@ -1,6 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
 import { BalanceItem } from '@/types/balance'
 import {
   Dialog,
@@ -10,10 +15,25 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { createBalanceItem, updateBalanceItem } from '@/lib/actions/balance'
-import { useRouter } from 'next/navigation'
+
+const formSchema = z.object({
+  category_level1: z.string().min(1, '필수 입력 항목입니다'),
+  category_level2: z.string().min(1, '필수 입력 항목입니다'),
+  category_level3: z.string().min(1, '필수 입력 항목입니다'),
+  amount: z.number({ message: '숫자를 입력해주세요' }),
+})
+
+type FormValues = z.infer<typeof formSchema>
 
 type BalanceFormDialogProps = {
   open: boolean
@@ -29,64 +49,53 @@ export function BalanceFormDialog({
   editItem,
 }: BalanceFormDialogProps) {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState({
-    category_level1: '',
-    category_level2: '',
-    category_level3: '',
-    amount: '',
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      category_level1: '',
+      category_level2: '',
+      category_level3: '',
+      amount: 0,
+    },
   })
 
   // Edit 모드일 때 폼 데이터 채우기
   useEffect(() => {
     if (editItem) {
-      setFormData({
+      form.reset({
         category_level1: editItem.category_level1,
         category_level2: editItem.category_level2,
         category_level3: editItem.category_level3,
-        amount: editItem.amount.toString(),
+        amount: editItem.amount,
       })
     } else {
-      setFormData({
+      form.reset({
         category_level1: '',
         category_level2: '',
         category_level3: '',
-        amount: '',
+        amount: 0,
       })
     }
-  }, [editItem, open])
+  }, [editItem, open, form])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-
+  const onSubmit = async (values: FormValues) => {
     try {
       if (editItem) {
-        // 수정
-        await updateBalanceItem(editItem.id, {
-          category_level1: formData.category_level1,
-          category_level2: formData.category_level2,
-          category_level3: formData.category_level3,
-          amount: Number(formData.amount),
-        })
+        await updateBalanceItem(editItem.id, values)
       } else {
-        // 생성
         await createBalanceItem({
           snapshot_id: snapshotId,
-          category_level1: formData.category_level1,
-          category_level2: formData.category_level2,
-          category_level3: formData.category_level3,
-          amount: Number(formData.amount),
+          ...values,
         })
       }
 
+      toast.success(editItem ? '수정되었습니다.' : '추가되었습니다.')
       router.refresh()
       onOpenChange(false)
     } catch (error) {
       console.error('Failed to save balance item:', error)
-      alert('저장에 실패했습니다.')
-    } finally {
-      setLoading(false)
+      toast.error('저장에 실패했습니다.')
     }
   }
 
@@ -94,79 +103,87 @@ export function BalanceFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
-            {editItem ? '항목 수정' : '항목 추가'}
-          </DialogTitle>
+          <DialogTitle>{editItem ? '항목 수정' : '항목 추가'}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="level1">Category Level 1</Label>
-            <Input
-              id="level1"
-              value={formData.category_level1}
-              onChange={(e) =>
-                setFormData({ ...formData, category_level1: e.target.value })
-              }
-              placeholder="예: 자산"
-              required
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="category_level1"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category Level 1</FormLabel>
+                  <FormControl>
+                    <Input placeholder="예: 자산" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="level2">Category Level 2</Label>
-            <Input
-              id="level2"
-              value={formData.category_level2}
-              onChange={(e) =>
-                setFormData({ ...formData, category_level2: e.target.value })
-              }
-              placeholder="예: 유동자산"
-              required
+            <FormField
+              control={form.control}
+              name="category_level2"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category Level 2</FormLabel>
+                  <FormControl>
+                    <Input placeholder="예: 유동자산" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="level3">Category Level 3</Label>
-            <Input
-              id="level3"
-              value={formData.category_level3}
-              onChange={(e) =>
-                setFormData({ ...formData, category_level3: e.target.value })
-              }
-              placeholder="예: 예금"
-              required
+            <FormField
+              control={form.control}
+              name="category_level3"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category Level 3</FormLabel>
+                  <FormControl>
+                    <Input placeholder="예: 예금" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="amount">금액</Label>
-            <Input
-              id="amount"
-              type="number"
-              value={formData.amount}
-              onChange={(e) =>
-                setFormData({ ...formData, amount: e.target.value })
-              }
-              placeholder="1000000"
-              required
+            <FormField
+              control={form.control}
+              name="amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>금액</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="1000000"
+                      {...field}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={loading}
-            >
-              취소
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? '저장 중...' : '저장'}
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={form.formState.isSubmitting}
+              >
+                취소
+              </Button>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? '저장 중...' : '저장'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   )

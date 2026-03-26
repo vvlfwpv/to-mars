@@ -1,6 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
 import { CashflowItem, CashflowCategory } from '@/types/cashflow'
 import {
   Dialog,
@@ -10,8 +15,15 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import {
   Select,
   SelectContent,
@@ -20,7 +32,16 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { createCashflowItem, updateCashflowItem } from '@/lib/actions/cashflow'
-import { useRouter } from 'next/navigation'
+
+const formSchema = z.object({
+  owner: z.string().min(1, '소유자를 선택해주세요'),
+  category: z.enum(['수입', '고정비', '비유동투자'], { message: '분류를 선택해주세요' }),
+  item_name: z.string().min(1, '항목명을 입력해주세요'),
+  description: z.string().optional(),
+  amount: z.number({ message: '숫자를 입력해주세요' }).positive('금액은 0보다 커야 합니다'),
+})
+
+type FormValues = z.infer<typeof formSchema>
 
 type CashflowFormDialogProps = {
   open: boolean
@@ -34,65 +55,60 @@ export function CashflowFormDialog({
   editItem,
 }: CashflowFormDialogProps) {
   const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [formData, setFormData] = useState({
-    owner: '',
-    category: '' as CashflowCategory | '',
-    item_name: '',
-    description: '',
-    amount: '',
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      owner: '',
+      category: undefined,
+      item_name: '',
+      description: '',
+      amount: 0,
+    },
   })
 
   useEffect(() => {
     if (editItem) {
-      setFormData({
+      form.reset({
         owner: editItem.owner,
         category: editItem.category,
         item_name: editItem.item_name,
         description: editItem.description || '',
-        amount: editItem.amount.toString(),
+        amount: editItem.amount,
       })
     } else {
-      setFormData({
+      form.reset({
         owner: '',
-        category: '',
+        category: undefined,
         item_name: '',
         description: '',
-        amount: '',
+        amount: 0,
       })
     }
-  }, [editItem, open])
+  }, [editItem, open, form])
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-
+  const onSubmit = async (values: FormValues) => {
     try {
-      if (editItem) {
-        await updateCashflowItem(editItem.id, {
-          owner: formData.owner,
-          category: formData.category as CashflowCategory,
-          item_name: formData.item_name,
-          description: formData.description || null,
-          amount: Number(formData.amount),
-        })
-      } else {
-        await createCashflowItem({
-          owner: formData.owner,
-          category: formData.category as CashflowCategory,
-          item_name: formData.item_name,
-          description: formData.description || null,
-          amount: Number(formData.amount),
-        })
+      const payload = {
+        owner: values.owner,
+        category: values.category as CashflowCategory,
+        item_name: values.item_name,
+        description: values.description || null,
+        amount: values.amount,
       }
 
+      if (editItem) {
+        await updateCashflowItem(editItem.id, payload)
+      } else {
+        await createCashflowItem(payload)
+      }
+
+      toast.success(editItem ? '수정되었습니다.' : '추가되었습니다.')
       router.refresh()
       onOpenChange(false)
     } catch (error) {
       console.error('Failed to save cashflow item:', error)
-      alert('저장에 실패했습니다.')
-    } finally {
-      setLoading(false)
+      toast.error('저장에 실패했습니다.')
     }
   }
 
@@ -100,105 +116,119 @@ export function CashflowFormDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>
-            {editItem ? '항목 수정' : '항목 추가'}
-          </DialogTitle>
+          <DialogTitle>{editItem ? '항목 수정' : '항목 추가'}</DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="owner">소유자</Label>
-            <Select
-              value={formData.owner}
-              onValueChange={(value) =>
-                setFormData({ ...formData, owner: value })
-              }
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="선택하세요" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="다은">다은</SelectItem>
-                <SelectItem value="필제">필제</SelectItem>
-                <SelectItem value="공동">공동</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="category">분류</Label>
-            <Select
-              value={formData.category}
-              onValueChange={(value) =>
-                setFormData({ ...formData, category: value as CashflowCategory })
-              }
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="선택하세요" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="수입">수입</SelectItem>
-                <SelectItem value="고정비">고정비</SelectItem>
-                <SelectItem value="비유동투자">비유동투자</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="item_name">항목명</Label>
-            <Input
-              id="item_name"
-              value={formData.item_name}
-              onChange={(e) =>
-                setFormData({ ...formData, item_name: e.target.value })
-              }
-              placeholder="예: 근로소득, 보험료"
-              required
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="owner"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>소유자</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="선택하세요" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="다은">다은</SelectItem>
+                      <SelectItem value="필제">필제</SelectItem>
+                      <SelectItem value="공동">공동</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">비고 (선택사항)</Label>
-            <Input
-              id="description"
-              value={formData.description}
-              onChange={(e) =>
-                setFormData({ ...formData, description: e.target.value })
-              }
-              placeholder="예: DB손보, 새마을공제"
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>분류</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="선택하세요" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="수입">수입</SelectItem>
+                      <SelectItem value="고정비">고정비</SelectItem>
+                      <SelectItem value="비유동투자">비유동투자</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="amount">금액</Label>
-            <Input
-              id="amount"
-              type="number"
-              value={formData.amount}
-              onChange={(e) =>
-                setFormData({ ...formData, amount: e.target.value })
-              }
-              placeholder="100000"
-              required
+            <FormField
+              control={form.control}
+              name="item_name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>항목명</FormLabel>
+                  <FormControl>
+                    <Input placeholder="예: 근로소득, 보험료" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <DialogFooter>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={loading}
-            >
-              취소
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? '저장 중...' : '저장'}
-            </Button>
-          </DialogFooter>
-        </form>
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>비고 (선택사항)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="예: DB손보, 새마을공제" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>금액</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="number"
+                      placeholder="100000"
+                      {...field}
+                      onChange={(e) => field.onChange(Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={form.formState.isSubmitting}
+              >
+                취소
+              </Button>
+              <Button type="submit" disabled={form.formState.isSubmitting}>
+                {form.formState.isSubmitting ? '저장 중...' : '저장'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   )
