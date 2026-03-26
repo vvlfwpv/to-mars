@@ -1,6 +1,10 @@
 import { getOrCreateBalanceSnapshot } from '@/lib/queries/balance'
 import { BalancePageClient } from '@/components/balance/balance-page-client'
 
+// 캐싱 비활성화 - 항상 최신 데이터 표시
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 type PageProps = {
   searchParams: Promise<{ year?: string; month?: string }>
 }

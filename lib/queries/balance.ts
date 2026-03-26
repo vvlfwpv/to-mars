@@ -58,8 +58,17 @@ export async function getAllBalanceSnapshotsWithItems(): Promise<BalanceSnapshot
   const { data, error } = await supabase
     .from('balance_snapshots')
     .select(`
-      *,
-      balance_items (*)
+      id,
+      year,
+      month,
+      created_at,
+      balance_items (
+        id,
+        amount,
+        category_level1,
+        category_level2,
+        category_level3
+      )
     `)
     .order('year', { ascending: false })
     .order('month', { ascending: false })

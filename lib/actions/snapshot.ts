@@ -158,3 +158,117 @@ export async function copyInvestmentSnapshotToNextMonth(
   revalidatePath('/investment')
   return { year: targetYear, month: targetMonth }
 }
+
+/**
+ * Balance Snapshot 삭제 (items 포함)
+ */
+export async function deleteBalanceSnapshot(year: number, month: number): Promise<void> {
+  const supabase = await createServerClient()
+
+  console.log('[deleteBalanceSnapshot] 시작:', { year, month })
+
+  // 스냅샷 조회
+  const { data: snapshot, error: findError } = await supabase
+    .from('balance_snapshots')
+    .select('id')
+    .eq('year', year)
+    .eq('month', month)
+    .single()
+
+  console.log('[deleteBalanceSnapshot] 스냅샷 조회 결과:', { snapshot, findError })
+
+  if (findError || !snapshot) {
+    console.error('[deleteBalanceSnapshot] 스냅샷을 찾을 수 없습니다:', findError)
+    throw new Error('스냅샷을 찾을 수 없습니다.')
+  }
+
+  // items 먼저 삭제 (FK 제약)
+  const { error: itemsError } = await supabase
+    .from('balance_items')
+    .delete()
+    .eq('snapshot_id', snapshot.id)
+
+  console.log('[deleteBalanceSnapshot] items 삭제 결과:', { itemsError })
+
+  if (itemsError) {
+    console.error('[deleteBalanceSnapshot] items 삭제 실패:', itemsError)
+    throw itemsError
+  }
+
+  // 스냅샷 삭제
+  const { error: snapshotError } = await supabase
+    .from('balance_snapshots')
+    .delete()
+    .eq('id', snapshot.id)
+
+  console.log('[deleteBalanceSnapshot] 스냅샷 삭제 결과:', { snapshotError })
+
+  if (snapshotError) {
+    console.error('[deleteBalanceSnapshot] 스냅샷 삭제 실패:', snapshotError)
+    throw snapshotError
+  }
+
+  console.log('[deleteBalanceSnapshot] 성공')
+
+  revalidatePath('/balance')
+  revalidatePath('/balance', 'page')
+  revalidatePath('/')
+  revalidatePath('/', 'page')
+}
+
+/**
+ * Investment Snapshot 삭제 (items 포함)
+ */
+export async function deleteInvestmentSnapshot(year: number, month: number): Promise<void> {
+  const supabase = await createServerClient()
+
+  console.log('[deleteInvestmentSnapshot] 시작:', { year, month })
+
+  // 스냅샷 조회
+  const { data: snapshot, error: findError } = await supabase
+    .from('investment_snapshots')
+    .select('id')
+    .eq('year', year)
+    .eq('month', month)
+    .single()
+
+  console.log('[deleteInvestmentSnapshot] 스냅샷 조회 결과:', { snapshot, findError })
+
+  if (findError || !snapshot) {
+    console.error('[deleteInvestmentSnapshot] 스냅샷을 찾을 수 없습니다:', findError)
+    throw new Error('스냅샷을 찾을 수 없습니다.')
+  }
+
+  // items 먼저 삭제 (FK 제약)
+  const { error: itemsError } = await supabase
+    .from('investment_items')
+    .delete()
+    .eq('snapshot_id', snapshot.id)
+
+  console.log('[deleteInvestmentSnapshot] items 삭제 결과:', { itemsError })
+
+  if (itemsError) {
+    console.error('[deleteInvestmentSnapshot] items 삭제 실패:', itemsError)
+    throw itemsError
+  }
+
+  // 스냅샷 삭제
+  const { error: snapshotError } = await supabase
+    .from('investment_snapshots')
+    .delete()
+    .eq('id', snapshot.id)
+
+  console.log('[deleteInvestmentSnapshot] 스냅샷 삭제 결과:', { snapshotError })
+
+  if (snapshotError) {
+    console.error('[deleteInvestmentSnapshot] 스냅샷 삭제 실패:', snapshotError)
+    throw snapshotError
+  }
+
+  console.log('[deleteInvestmentSnapshot] 성공')
+
+  revalidatePath('/investment')
+  revalidatePath('/investment', 'page')
+  revalidatePath('/')
+  revalidatePath('/', 'page')
+}

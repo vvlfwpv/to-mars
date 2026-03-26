@@ -16,7 +16,8 @@ import { InvestmentTable } from './investment-table'
 import { InvestmentFormDialog } from './investment-form-dialog'
 import { InvestmentCopyDialog } from './investment-copy-dialog'
 import { deleteInvestmentItem } from '@/lib/actions/investment'
-import { Plus, Copy } from 'lucide-react'
+import { deleteInvestmentSnapshot } from '@/lib/actions/snapshot'
+import { Plus, Copy, Trash2 } from 'lucide-react'
 
 type InvestmentPageClientProps = {
   snapshot: InvestmentSnapshotWithItems
@@ -36,12 +37,45 @@ export function InvestmentPageClient({
   const [editItem, setEditItem] = useState<InvestmentItem | null>(null)
   const [copyDialogOpen, setCopyDialogOpen] = useState(false)
 
-  const handleYearChange = (newYear: string) => {
-    router.push(`/investment?year=${newYear}&month=${initialMonth}`)
+  const checkSnapshotExists = async (year: number, month: number): Promise<boolean> => {
+    try {
+      const response = await fetch(
+        `/api/snapshot/check-investment?year=${year}&month=${month}`
+      )
+      const data = await response.json()
+      return data.exists
+    } catch (error) {
+      console.error('Failed to check snapshot:', error)
+      return false
+    }
   }
 
-  const handleMonthChange = (newMonth: string) => {
-    router.push(`/investment?year=${initialYear}&month=${newMonth}`)
+  const handleYearChange = async (newYear: string) => {
+    const year = parseInt(newYear)
+    const exists = await checkSnapshotExists(year, initialMonth)
+
+    if (!exists) {
+      const confirmed = confirm(
+        `${year}년 ${initialMonth}월 스냅샷이 존재하지 않습니다.\n새로 생성하시겠습니까?`
+      )
+      if (!confirmed) return
+    }
+
+    router.push(`/investment?year=${year}&month=${initialMonth}`)
+  }
+
+  const handleMonthChange = async (newMonth: string) => {
+    const month = parseInt(newMonth)
+    const exists = await checkSnapshotExists(initialYear, month)
+
+    if (!exists) {
+      const confirmed = confirm(
+        `${initialYear}년 ${month}월 스냅샷이 존재하지 않습니다.\n새로 생성하시겠습니까?`
+      )
+      if (!confirmed) return
+    }
+
+    router.push(`/investment?year=${initialYear}&month=${month}`)
   }
 
   const handleEdit = (item: InvestmentItem) => {
@@ -59,6 +93,25 @@ export function InvestmentPageClient({
     } catch (error) {
       console.error('Failed to delete item:', error)
       toast.error('삭제에 실패했습니다.')
+    }
+  }
+
+  const handleDeleteSnapshot = async () => {
+    if (
+      !confirm(
+        `${initialYear}년 ${initialMonth}월 스냅샷을 삭제하시겠습니까?\n이 작업은 되돌릴 수 없습니다.`
+      )
+    )
+      return
+
+    try {
+      await deleteInvestmentSnapshot(initialYear, initialMonth)
+      toast.success('스냅샷이 삭제되었습니다.')
+      // Dashboard로 이동
+      router.push('/')
+    } catch (error) {
+      console.error('Failed to delete snapshot:', error)
+      toast.error('스냅샷 삭제에 실패했습니다.')
     }
   }
 
@@ -108,6 +161,16 @@ export function InvestmentPageClient({
           <Button variant="outline" size="sm" onClick={() => setCopyDialogOpen(true)}>
             <Copy className="h-4 w-4 mr-2" />
             다음 달로 복사
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDeleteSnapshot}
+            className="text-red-600 hover:text-red-700"
+          >
+            <Trash2 className="h-4 w-4 mr-2" />
+            스냅샷 삭제
           </Button>
         </div>
       </div>

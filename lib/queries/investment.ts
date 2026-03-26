@@ -57,8 +57,19 @@ export async function getAllInvestmentSnapshotsWithItems(): Promise<InvestmentSn
   const { data, error } = await supabase
     .from('investment_snapshots')
     .select(`
-      *,
-      investment_items (*)
+      id,
+      year,
+      month,
+      created_at,
+      investment_items (
+        id,
+        principal,
+        month_end_value,
+        category,
+        code,
+        name,
+        quantity
+      )
     `)
     .order('year', { ascending: false })
     .order('month', { ascending: false })
