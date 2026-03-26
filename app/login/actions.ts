@@ -13,12 +13,16 @@ export async function login(formData: FormData) {
     password: formData.get('password') as string,
   }
 
+  console.log('[Login] Attempting login for:', data.email)
+
   const { error } = await supabase.auth.signInWithPassword(data)
 
   if (error) {
+    console.log('[Login] Error:', error.message)
     redirect('/login?error=Could not authenticate user')
   }
 
+  console.log('[Login] Success, redirecting to /')
   revalidatePath('/', 'layout')
   redirect('/')
 }
@@ -44,7 +48,9 @@ export async function signup(formData: FormData) {
 export async function signInWithGoogle() {
   const supabase = await createServerClient()
   const headersList = await headers()
-  const origin = headersList.get('origin') || 'http://localhost:3000'
+  const origin = headersList.get('origin') || process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+
+  console.log('[Google Login] origin:', origin)
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
@@ -54,10 +60,12 @@ export async function signInWithGoogle() {
   })
 
   if (error) {
+    console.log('[Google Login] Error:', error.message)
     redirect('/login?error=Could not authenticate with Google')
   }
 
   if (data.url) {
+    console.log('[Google Login] Redirecting to:', data.url)
     redirect(data.url)
   }
 }
