@@ -50,6 +50,26 @@ export async function getAllBalanceSnapshots(): Promise<BalanceSnapshot[]> {
 }
 
 /**
+ * 모든 Balance Snapshots 조회 (items 포함)
+ */
+export async function getAllBalanceSnapshotsWithItems(): Promise<BalanceSnapshotWithItems[]> {
+  const supabase = await createServerClient()
+
+  const { data, error } = await supabase
+    .from('balance_snapshots')
+    .select(`
+      *,
+      balance_items (*)
+    `)
+    .order('year', { ascending: false })
+    .order('month', { ascending: false })
+
+  if (error) throw error
+
+  return data as BalanceSnapshotWithItems[]
+}
+
+/**
  * Balance Snapshot 생성 (빈 스냅샷)
  */
 export async function createBalanceSnapshot(
