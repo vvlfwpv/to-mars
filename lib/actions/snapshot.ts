@@ -165,8 +165,6 @@ export async function copyInvestmentSnapshotToNextMonth(
 export async function deleteBalanceSnapshot(year: number, month: number): Promise<void> {
   const supabase = await createServerClient()
 
-  console.log('[deleteBalanceSnapshot] 시작:', { year, month })
-
   // 스냅샷 조회
   const { data: snapshot, error: findError } = await supabase
     .from('balance_snapshots')
@@ -175,10 +173,7 @@ export async function deleteBalanceSnapshot(year: number, month: number): Promis
     .eq('month', month)
     .single()
 
-  console.log('[deleteBalanceSnapshot] 스냅샷 조회 결과:', { snapshot, findError })
-
   if (findError || !snapshot) {
-    console.error('[deleteBalanceSnapshot] 스냅샷을 찾을 수 없습니다:', findError)
     throw new Error('스냅샷을 찾을 수 없습니다.')
   }
 
@@ -188,12 +183,7 @@ export async function deleteBalanceSnapshot(year: number, month: number): Promis
     .delete()
     .eq('snapshot_id', snapshot.id)
 
-  console.log('[deleteBalanceSnapshot] items 삭제 결과:', { itemsError })
-
-  if (itemsError) {
-    console.error('[deleteBalanceSnapshot] items 삭제 실패:', itemsError)
-    throw itemsError
-  }
+  if (itemsError) throw itemsError
 
   // 스냅샷 삭제
   const { error: snapshotError } = await supabase
@@ -201,17 +191,9 @@ export async function deleteBalanceSnapshot(year: number, month: number): Promis
     .delete()
     .eq('id', snapshot.id)
 
-  console.log('[deleteBalanceSnapshot] 스냅샷 삭제 결과:', { snapshotError })
+  if (snapshotError) throw snapshotError
 
-  if (snapshotError) {
-    console.error('[deleteBalanceSnapshot] 스냅샷 삭제 실패:', snapshotError)
-    throw snapshotError
-  }
-
-  console.log('[deleteBalanceSnapshot] 성공')
-
-  revalidatePath('/balance')
-  revalidatePath('/balance', 'page')
+  // Dashboard만 revalidate (balance 페이지는 revalidate하면 재생성됨)
   revalidatePath('/')
   revalidatePath('/', 'page')
 }
@@ -222,8 +204,6 @@ export async function deleteBalanceSnapshot(year: number, month: number): Promis
 export async function deleteInvestmentSnapshot(year: number, month: number): Promise<void> {
   const supabase = await createServerClient()
 
-  console.log('[deleteInvestmentSnapshot] 시작:', { year, month })
-
   // 스냅샷 조회
   const { data: snapshot, error: findError } = await supabase
     .from('investment_snapshots')
@@ -232,10 +212,7 @@ export async function deleteInvestmentSnapshot(year: number, month: number): Pro
     .eq('month', month)
     .single()
 
-  console.log('[deleteInvestmentSnapshot] 스냅샷 조회 결과:', { snapshot, findError })
-
   if (findError || !snapshot) {
-    console.error('[deleteInvestmentSnapshot] 스냅샷을 찾을 수 없습니다:', findError)
     throw new Error('스냅샷을 찾을 수 없습니다.')
   }
 
@@ -245,12 +222,7 @@ export async function deleteInvestmentSnapshot(year: number, month: number): Pro
     .delete()
     .eq('snapshot_id', snapshot.id)
 
-  console.log('[deleteInvestmentSnapshot] items 삭제 결과:', { itemsError })
-
-  if (itemsError) {
-    console.error('[deleteInvestmentSnapshot] items 삭제 실패:', itemsError)
-    throw itemsError
-  }
+  if (itemsError) throw itemsError
 
   // 스냅샷 삭제
   const { error: snapshotError } = await supabase
@@ -258,17 +230,9 @@ export async function deleteInvestmentSnapshot(year: number, month: number): Pro
     .delete()
     .eq('id', snapshot.id)
 
-  console.log('[deleteInvestmentSnapshot] 스냅샷 삭제 결과:', { snapshotError })
+  if (snapshotError) throw snapshotError
 
-  if (snapshotError) {
-    console.error('[deleteInvestmentSnapshot] 스냅샷 삭제 실패:', snapshotError)
-    throw snapshotError
-  }
-
-  console.log('[deleteInvestmentSnapshot] 성공')
-
-  revalidatePath('/investment')
-  revalidatePath('/investment', 'page')
+  // Dashboard만 revalidate (investment 페이지는 revalidate하면 재생성됨)
   revalidatePath('/')
   revalidatePath('/', 'page')
 }

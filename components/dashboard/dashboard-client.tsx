@@ -130,13 +130,14 @@ export function DashboardClient({
       }
     })
 
-    // 전월대비 계산
+    // 전월대비 계산 (데이터가 내림차순이므로 index + 1이 전월)
     return data.map((item, index) => {
-      if (index === 0) {
+      // 마지막 항목(가장 오래된 달)은 전월이 없음
+      if (index === data.length - 1) {
         return { ...item, monthOverMonthChange: 0, monthOverMonthRate: 0 }
       }
 
-      const prevNetAssets = data[index - 1].netAssets
+      const prevNetAssets = data[index + 1].netAssets
       const change = item.netAssets - prevNetAssets
       const rate = prevNetAssets !== 0 ? (change / prevNetAssets) * 100 : 0
 

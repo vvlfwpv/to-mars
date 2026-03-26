@@ -103,11 +103,11 @@ export function BalancePageClient({
       return
 
     try {
+      // Dashboard로 먼저 이동 (revalidate로 인한 재생성 방지)
+      router.push('/')
+      // 이동 후 삭제
       await deleteBalanceSnapshot(initialYear, initialMonth)
       toast.success('스냅샷이 삭제되었습니다.')
-      // 현재 연월로 이동
-      const now = new Date()
-      router.push(`/balance?year=${now.getFullYear()}&month=${now.getMonth() + 1}`)
     } catch (error) {
       console.error('Failed to delete snapshot:', error)
       toast.error('스냅샷 삭제에 실패했습니다.')

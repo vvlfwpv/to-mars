@@ -105,10 +105,11 @@ export function InvestmentPageClient({
       return
 
     try {
+      // Dashboard로 먼저 이동 (revalidate로 인한 재생성 방지)
+      router.push('/')
+      // 이동 후 삭제
       await deleteInvestmentSnapshot(initialYear, initialMonth)
       toast.success('스냅샷이 삭제되었습니다.')
-      // Dashboard로 이동
-      router.push('/')
     } catch (error) {
       console.error('Failed to delete snapshot:', error)
       toast.error('스냅샷 삭제에 실패했습니다.')
