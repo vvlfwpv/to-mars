@@ -1,19 +1,18 @@
 'use client'
 
 import { CashflowItem } from '@/types/cashflow'
+import { Owner } from '@/types/owner'
 import { Button } from '@/components/ui/button'
 import { Pencil, Trash2 } from 'lucide-react'
 
 type CashflowTableProps = {
   items: CashflowItem[]
+  owners: Owner[]
   onEdit: (item: CashflowItem) => void
   onDelete: (id: string) => void
 }
 
-export function CashflowTable({ items, onEdit, onDelete }: CashflowTableProps) {
-  // 오너별로 그룹화
-  const owners = ['다은', '필제', '공동']
-
+export function CashflowTable({ items, owners, onEdit, onDelete }: CashflowTableProps) {
   // 각 오너별 데이터 계산
   const getOwnerData = (owner: string) => {
     const ownerItems = items.filter((item) => item.owner === owner)
@@ -33,22 +32,21 @@ export function CashflowTable({ items, onEdit, onDelete }: CashflowTableProps) {
     return { items: ownerItems, income, fixedExpense, investment }
   }
 
-  const ownerData = {
-    다은: getOwnerData('다은'),
-    필제: getOwnerData('필제'),
-    공동: getOwnerData('공동'),
-  }
+  // 동적으로 ownerData 생성
+  const ownerDataMap = new Map(
+    owners.map((owner) => [owner.name, getOwnerData(owner.name)])
+  )
 
   // 전체 합계 계산
-  const totalIncome = Object.values(ownerData).reduce(
+  const totalIncome = Array.from(ownerDataMap.values()).reduce(
     (sum, data) => sum + data.income,
     0
   )
-  const totalFixedExpense = Object.values(ownerData).reduce(
+  const totalFixedExpense = Array.from(ownerDataMap.values()).reduce(
     (sum, data) => sum + data.fixedExpense,
     0
   )
-  const totalInvestment = Object.values(ownerData).reduce(
+  const totalInvestment = Array.from(ownerDataMap.values()).reduce(
     (sum, data) => sum + data.investment,
     0
   )
@@ -59,11 +57,12 @@ export function CashflowTable({ items, onEdit, onDelete }: CashflowTableProps) {
     <div className="space-y-6">
       <div className="grid grid-cols-3 gap-4">
         {owners.map((owner) => {
-          const data = ownerData[owner as keyof typeof ownerData]
+          const data = ownerDataMap.get(owner.name)
+          if (!data) return null
 
           return (
-            <div key={owner} className="border rounded-lg p-4 space-y-4">
-              <h3 className="text-lg font-bold text-center">{owner}</h3>
+            <div key={owner.id} className="border rounded-lg p-4 space-y-4">
+              <h3 className="text-lg font-bold text-center">{owner.name}</h3>
 
               {/* 수입 */}
               <div className="space-y-2">

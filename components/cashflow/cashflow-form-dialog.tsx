@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { CashflowItem, CashflowCategory } from '@/types/cashflow'
+import { Owner } from '@/types/owner'
 import {
   Dialog,
   DialogContent,
@@ -47,12 +48,14 @@ type CashflowFormDialogProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   editItem?: CashflowItem | null
+  owners: Owner[]
 }
 
 export function CashflowFormDialog({
   open,
   onOpenChange,
   editItem,
+  owners,
 }: CashflowFormDialogProps) {
   const router = useRouter()
 
@@ -134,9 +137,11 @@ export function CashflowFormDialog({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="다은">다은</SelectItem>
-                      <SelectItem value="필제">필제</SelectItem>
-                      <SelectItem value="공동">공동</SelectItem>
+                      {owners.map((owner) => (
+                        <SelectItem key={owner.id} value={owner.name}>
+                          {owner.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />

@@ -1,4 +1,5 @@
 import { getAllCashflowItems } from '@/lib/queries/cashflow'
+import { getAllOwners } from '@/lib/queries/owner'
 import { CashflowPageClient } from '@/components/cashflow/cashflow-page-client'
 
 // 캐싱 비활성화 - 항상 최신 데이터 표시
@@ -7,6 +8,7 @@ export const revalidate = 0
 
 export default async function CashflowPage() {
   const items = await getAllCashflowItems()
+  const owners = await getAllOwners()
 
-  return <CashflowPageClient items={items} />
+  return <CashflowPageClient items={items} owners={owners} />
 }
