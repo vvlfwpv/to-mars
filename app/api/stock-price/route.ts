@@ -48,7 +48,7 @@ async function fetchYahooStockData(yahooSymbol: string): Promise<StockData | nul
 }
 
 /**
- * 한국 주식 가격 조회 (.KS, .KQ 둘 다 시도)
+ * 국내 주식 가격 조회 (.KS, .KQ 둘 다 시도)
  */
 async function fetchKoreanStockPrice(code: string, stockName?: string): Promise<StockData | null> {
   // .KS (KOSPI)와 .KQ (KOSDAQ) 둘 다 시도
@@ -89,7 +89,7 @@ async function fetchKoreanStockPrice(code: string, stockName?: string): Promise<
 }
 
 /**
- * 주식 가격 조회 (한국/해외 자동 판별)
+ * 주식 가격 조회 (국내/해외 자동 판별)
  */
 async function fetchStockPrice(code: string, stockName?: string): Promise<StockData | null> {
   // 이미 suffix가 붙어있으면 그대로 조회
@@ -97,12 +97,12 @@ async function fetchStockPrice(code: string, stockName?: string): Promise<StockD
     return await fetchYahooStockData(code)
   }
 
-  // 숫자로 시작하면 한국 주식
+  // 숫자로 시작하면 국내 주식
   if (/^\d/.test(code)) {
     return await fetchKoreanStockPrice(code, stockName)
   }
 
-  // 그 외 (미국 주식 등)
+  // 그 외 (해외 주식 등)
   return await fetchYahooStockData(code)
 }
 

@@ -197,25 +197,31 @@ export function DashboardClient({
     }
 
     return snapshots.map((snapshot) => {
-      const totalPrincipal = snapshot.investment_items.reduce(
-        (sum, item) => sum + Number(item.principal),
-        0
-      )
-      const totalValue = snapshot.investment_items.reduce(
-        (sum, item) => sum + Number(item.month_end_value),
-        0
-      )
+      const exchangeRate = snapshot.exchange_rate || 0
+
+      // 환율 적용하여 원화로 환산
+      const totalPrincipal = snapshot.investment_items.reduce((sum, item) => {
+        const currency = item.currency || (['해외주식', '해외ETF'].includes(item.category) ? 'USD' : 'KRW')
+        const value = Number(item.principal)
+        return sum + (currency === 'USD' && exchangeRate ? value * exchangeRate : value)
+      }, 0)
+
+      const totalValue = snapshot.investment_items.reduce((sum, item) => {
+        const currency = item.currency || (['해외주식', '해외ETF'].includes(item.category) ? 'USD' : 'KRW')
+        const value = Number(item.month_end_value)
+        return sum + (currency === 'USD' && exchangeRate ? value * exchangeRate : value)
+      }, 0)
+
       const profitLoss = totalValue - totalPrincipal
-      const profitRate =
-        totalPrincipal > 0 ? (profitLoss / totalPrincipal) * 100 : 0
+      const profitRate = totalPrincipal > 0 ? (profitLoss / totalPrincipal) * 100 : 0
 
       return {
         name: `${snapshot.year}-${snapshot.month}`,
         year: snapshot.year,
         month: snapshot.month,
-        totalPrincipal,
-        totalValue,
-        profitLoss,
+        totalPrincipal: Math.floor(totalPrincipal),
+        totalValue: Math.floor(totalValue),
+        profitLoss: Math.floor(profitLoss),
         profitRate,
       }
     })
@@ -410,7 +416,7 @@ export function DashboardClient({
 
         {/* Tabs */}
         <Tabs defaultValue="balance" className="space-y-6">
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
             <TabsList className="inline-flex h-8 w-fit items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground sm:h-9">
               <TabsTrigger
                 value="balance"
@@ -426,7 +432,7 @@ export function DashboardClient({
               </TabsTrigger>
             </TabsList>
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               {/* Date Range Selector */}
               <div className="flex items-center gap-1 rounded-lg border bg-card p-2 shadow-sm">
                 <Calendar className="hidden h-4 w-4 text-muted-foreground sm:block" />

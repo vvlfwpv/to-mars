@@ -125,10 +125,26 @@ export async function copyInvestmentSnapshotToNextMonth(
 
     snapshotId = existingSnapshot.id
   } else {
+    // 환율 조회
+    let exchangeRate: number | null = null
+    try {
+      const response = await fetch('https://open.er-api.com/v6/latest/USD', {
+        headers: { 'User-Agent': 'Mozilla/5.0' },
+      })
+      if (response.ok) {
+        const data = await response.json()
+        exchangeRate = data?.rates?.KRW || null
+      }
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to fetch exchange rate during copy:', error)
+      }
+    }
+
     // 새 스냅샷 생성
     const { data: newSnapshot, error: snapshotError } = await supabase
       .from('investment_snapshots')
-      .insert({ year: targetYear, month: targetMonth })
+      .insert({ year: targetYear, month: targetMonth, exchange_rate: exchangeRate })
       .select()
       .single()
 
@@ -146,6 +162,7 @@ export async function copyInvestmentSnapshotToNextMonth(
       principal: item.principal,
       month_end_value: item.month_end_value,
       quantity: item.quantity,
+      currency: item.currency,
     }))
 
     const { error: itemsError } = await supabase
@@ -196,6 +213,25 @@ export async function deleteBalanceSnapshot(year: number, month: number): Promis
   // Dashboard만 revalidate (balance 페이지는 revalidate하면 재생성됨)
   revalidatePath('/')
   revalidatePath('/', 'page')
+}
+
+/**
+ * Investment Snapshot의 환율 업데이트
+ */
+export async function updateInvestmentSnapshotExchangeRate(
+  snapshotId: string,
+  exchangeRate: number
+): Promise<void> {
+  const supabase = await createServerClient()
+
+  const { error } = await supabase
+    .from('investment_snapshots')
+    .update({ exchange_rate: exchangeRate })
+    .eq('id', snapshotId)
+
+  if (error) throw error
+
+  revalidatePath('/investment')
 }
 
 /**

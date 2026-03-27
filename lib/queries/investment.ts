@@ -73,6 +73,7 @@ export async function getAllInvestmentSnapshotsWithItems(): Promise<InvestmentSn
       group_id,
       year,
       month,
+      exchange_rate,
       created_at,
       investment_items (
         id,
@@ -81,7 +82,8 @@ export async function getAllInvestmentSnapshotsWithItems(): Promise<InvestmentSn
         category,
         code,
         name,
-        quantity
+        quantity,
+        currency
       )
     `)
     .eq('group_id', groupId)
@@ -105,9 +107,25 @@ export async function createInvestmentSnapshot(
   // Get current user's group
   const groupId = await getCurrentUserGroupId()
 
+  // 환율 조회
+  let exchangeRate: number | null = null
+  try {
+    const response = await fetch('https://open.er-api.com/v6/latest/USD', {
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+    })
+    if (response.ok) {
+      const data = await response.json()
+      exchangeRate = data?.rates?.KRW || null
+    }
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Failed to fetch exchange rate during snapshot creation:', error)
+    }
+  }
+
   const { data, error } = await supabase
     .from('investment_snapshots')
-    .insert({ group_id: groupId, year, month })
+    .insert({ group_id: groupId, year, month, exchange_rate: exchangeRate })
     .select()
     .single()
 

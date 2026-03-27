@@ -61,6 +61,7 @@ export function InvestmentCopyDialog({
           principal: item.principal,
           month_end_value: item.month_end_value,
           quantity: item.quantity,
+          currency: item.currency,
           selected: true,
         }))
       )
@@ -85,6 +86,7 @@ export function InvestmentCopyDialog({
       principal: 0,
       month_end_value: 0,
       quantity: null,
+      currency: 'KRW',
       selected: true,
     }
     setCopyItems((prev) => [...prev, newItem])
@@ -111,6 +113,7 @@ export function InvestmentCopyDialog({
         principal: item.principal,
         month_end_value: item.month_end_value,
         quantity: item.quantity,
+        currency: item.currency,
       }))
 
     if (selectedItems.length === 0) {

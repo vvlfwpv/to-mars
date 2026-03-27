@@ -16,7 +16,7 @@ import { InvestmentTable } from './investment-table'
 import { InvestmentFormDialog } from './investment-form-dialog'
 import { InvestmentCopyDialog } from './investment-copy-dialog'
 import { deleteInvestmentItem, updateInvestmentItem } from '@/lib/actions/investment'
-import { deleteInvestmentSnapshot } from '@/lib/actions/snapshot'
+import { deleteInvestmentSnapshot, updateInvestmentSnapshotExchangeRate } from '@/lib/actions/snapshot'
 import { Plus, Copy, Trash2, Calendar, TrendingUp } from 'lucide-react'
 
 type InvestmentPageClientProps = {
@@ -40,6 +40,8 @@ export function InvestmentPageClient({
   const [copyDialogOpen, setCopyDialogOpen] = useState(false)
   const [loadingPrices, setLoadingPrices] = useState(false)
   const [currentPrices, setCurrentPrices] = useState<Record<string, number>>({})
+  // 스냅샷에 저장된 환율 사용
+  const [exchangeRate, setExchangeRate] = useState<number | null>(snapshot.exchange_rate)
 
   const checkSnapshotExists = async (year: number, month: number): Promise<boolean> => {
     try {
@@ -135,12 +137,13 @@ export function InvestmentPageClient({
   const handleFetchPrices = async () => {
     setLoadingPrices(true)
     setCurrentPrices({})
+    setExchangeRate(null)
 
     try {
       // 종목코드가 있는 항목들만 필터링
       const itemsWithCode = snapshot.investment_items.filter((item) => item.code)
 
-      // 모든 종목의 가격을 병렬로 조회
+      // 환율과 모든 종목의 가격을 병렬로 조회
       const pricePromises = itemsWithCode.map(async (item) => {
         try {
           const params = new URLSearchParams({
@@ -160,11 +163,32 @@ export function InvestmentPageClient({
         }
       })
 
-      const results = await Promise.all(pricePromises)
+      const exchangeRatePromise = fetch('/api/exchange-rate')
 
-      // 성공한 결과만 저장
+      const [exchangeRateResponse, ...priceResults] = await Promise.all([
+        exchangeRatePromise,
+        ...pricePromises,
+      ])
+
+      // 환율 저장 및 스냅샷에 업데이트
+      if (exchangeRateResponse.ok) {
+        const exchangeData = await exchangeRateResponse.json()
+        const newRate = exchangeData.rate
+        setExchangeRate(newRate)
+
+        // 스냅샷에 환율 저장
+        try {
+          await updateInvestmentSnapshotExchangeRate(snapshot.id, newRate)
+        } catch (error) {
+          if (process.env.NODE_ENV === 'development') {
+            console.error('Failed to update exchange rate:', error)
+          }
+        }
+      }
+
+      // 성공한 가격 결과만 저장
       const prices: Record<string, number> = {}
-      results.forEach((result) => {
+      priceResults.forEach((result) => {
         if (result && result.price) {
           prices[result.id] = result.price
         }
@@ -231,10 +255,10 @@ export function InvestmentPageClient({
         <div className="mb-8 space-y-4">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-              Investment Portfolio
+              Investment Sheet
             </h1>
             <p className="mt-1 text-sm text-muted-foreground sm:text-base">
-              투자 포트폴리오를 관리하세요
+              투자 현황을 관리하세요
             </p>
           </div>
 
@@ -324,6 +348,7 @@ export function InvestmentPageClient({
           onEdit={handleEdit}
           onDelete={handleDelete}
           currentPrices={currentPrices}
+          exchangeRate={exchangeRate}
         />
 
         <InvestmentFormDialog

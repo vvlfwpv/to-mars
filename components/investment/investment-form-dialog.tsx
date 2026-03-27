@@ -24,6 +24,13 @@ import {
   FormMessage,
 } from '@/components/ui/form'
 import { Input } from '@/components/ui/input'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { createInvestmentItem, updateInvestmentItem } from '@/lib/actions/investment'
 
 const formSchema = z.object({
@@ -33,6 +40,7 @@ const formSchema = z.object({
   principal: z.number({ message: '숫자를 입력해주세요' }).positive('원금은 0보다 커야 합니다'),
   month_end_value: z.number({ message: '숫자를 입력해주세요' }).nonnegative('월말평가액은 0 이상이어야 합니다'),
   quantity: z.number().optional(),
+  currency: z.enum(['KRW', 'USD']),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -61,11 +69,14 @@ export function InvestmentFormDialog({
       principal: 0,
       month_end_value: 0,
       quantity: undefined,
+      currency: 'KRW',
     },
   })
 
   useEffect(() => {
     if (editItem) {
+      // currency가 없으면 카테고리로 판단
+      const itemCurrency = editItem.currency || (['해외주식', '해외ETF'].includes(editItem.category) ? 'USD' : 'KRW')
       form.reset({
         category: editItem.category,
         code: editItem.code || '',
@@ -73,6 +84,7 @@ export function InvestmentFormDialog({
         principal: editItem.principal,
         month_end_value: editItem.month_end_value,
         quantity: editItem.quantity || undefined,
+        currency: itemCurrency as 'KRW' | 'USD',
       })
     } else {
       form.reset({
@@ -82,6 +94,7 @@ export function InvestmentFormDialog({
         principal: 0,
         month_end_value: 0,
         quantity: undefined,
+        currency: 'KRW',
       })
     }
   }, [editItem, open, form])
@@ -95,6 +108,7 @@ export function InvestmentFormDialog({
         principal: values.principal,
         month_end_value: values.month_end_value,
         quantity: values.quantity || null,
+        currency: values.currency,
       }
 
       if (editItem) {
@@ -126,19 +140,43 @@ export function InvestmentFormDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>대분류</FormLabel>
-                  <FormControl>
-                    <Input placeholder="예: 한국주식, 미국주식, 미국ETF" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>대분류</FormLabel>
+                    <FormControl>
+                      <Input placeholder="예: 국내주식, 해외주식" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="currency"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>통화</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="통화 선택" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="KRW">KRW (원)</SelectItem>
+                        <SelectItem value="USD">USD (달러)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
