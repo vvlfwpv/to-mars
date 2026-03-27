@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2, Wallet, CreditCard, TrendingUp, Plus, FileText } from 'lucide-react'
 
 type BalanceTableProps = {
   items: BalanceItem[]
@@ -61,8 +61,18 @@ export function BalanceTable({ items, onEdit, onDelete }: BalanceTableProps) {
               <TableBody>
                 {items.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={5} className="h-24 text-center text-sm text-muted-foreground">
-                      등록된 항목이 없습니다.
+                    <TableCell colSpan={5} className="h-64">
+                      <div className="flex flex-col items-center justify-center gap-3 text-center">
+                        <div className="rounded-full bg-muted p-4">
+                          <FileText className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium">등록된 항목이 없습니다</p>
+                          <p className="text-xs text-muted-foreground">
+                            상단의 "항목 추가" 버튼을 클릭하여 자산을 추가해보세요
+                          </p>
+                        </div>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -107,16 +117,31 @@ export function BalanceTable({ items, onEdit, onDelete }: BalanceTableProps) {
       {/* Summary Card */}
       <Card className="border-border/40 bg-muted/30 shadow-sm">
         <CardContent className="space-y-2 p-4 sm:p-6">
-          <div className="flex justify-between text-xs sm:text-sm">
-            <span className="text-muted-foreground">총 자산:</span>
+          <div className="flex items-center justify-between text-xs sm:text-sm">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-emerald-500/10 p-1.5">
+                <Wallet className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-500" />
+              </div>
+              <span className="text-muted-foreground">총 자산</span>
+            </div>
             <span className="font-semibold tabular-nums">{totalAssets.toLocaleString()}원</span>
           </div>
-          <div className="flex justify-between text-xs sm:text-sm">
-            <span className="text-muted-foreground">총 부채:</span>
+          <div className="flex items-center justify-between text-xs sm:text-sm">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-rose-500/10 p-1.5">
+                <CreditCard className="h-3.5 w-3.5 text-rose-600 dark:text-rose-500" />
+              </div>
+              <span className="text-muted-foreground">총 부채</span>
+            </div>
             <span className="font-semibold tabular-nums">{totalLiabilities.toLocaleString()}원</span>
           </div>
-          <div className="flex justify-between border-t pt-2">
-            <span className="text-sm font-semibold sm:text-base">순자산:</span>
+          <div className="flex items-center justify-between border-t pt-2">
+            <div className="flex items-center gap-2">
+              <div className={`rounded-lg p-1.5 ${netAssets >= 0 ? 'bg-emerald-500/10' : 'bg-rose-500/10'}`}>
+                <TrendingUp className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${netAssets >= 0 ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`} />
+              </div>
+              <span className="text-sm font-semibold sm:text-base">순자산</span>
+            </div>
             <span className={`text-sm font-bold tabular-nums sm:text-base ${netAssets >= 0 ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
               {netAssets.toLocaleString()}원
             </span>

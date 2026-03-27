@@ -25,6 +25,7 @@ import {
   Line,
   BarChart,
   Bar,
+  Cell,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -32,7 +33,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts'
-import { TrendingUp, TrendingDown, Calendar, CalendarDays } from 'lucide-react'
+import { TrendingUp, TrendingDown, Calendar, CalendarDays, Wallet, PiggyBank, ArrowUpRight, ArrowDownRight, FileText, PieChart } from 'lucide-react'
 import type { BalanceSnapshotWithItems } from '@/types/balance'
 import type { InvestmentSnapshotWithItems } from '@/types/investment'
 
@@ -220,6 +221,19 @@ export function DashboardClient({
     })
   }, [filteredInvestmentSnapshots, viewMode])
 
+  // Summary Stats 계산
+  const summaryStats = useMemo(() => {
+    const latestBalance = balanceData[0]
+    const latestInvestment = investmentData[0]
+
+    return {
+      netAssets: latestBalance?.netAssets || 0,
+      netAssetsChange: latestBalance?.monthOverMonthChange || 0,
+      totalInvestment: latestInvestment?.totalValue || 0,
+      investmentProfitRate: latestInvestment?.profitRate || 0,
+    }
+  }, [balanceData, investmentData])
+
   const checkBalanceSnapshotExists = async (
     year: number,
     month: number
@@ -277,10 +291,10 @@ export function DashboardClient({
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+    <div className="min-h-screen theme-gradient-bg">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-6">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
               Dashboard
@@ -289,6 +303,105 @@ export function DashboardClient({
               재무 현황을 한눈에 확인하세요
             </p>
           </div>
+        </div>
+
+        {/* Summary Stats */}
+        <div className="mb-8 grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          {/* 총 순자산 */}
+          <Card className="border-border/40 shadow-sm">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="rounded-lg bg-emerald-500/10 p-2">
+                    <Wallet className="h-4 w-4 text-emerald-600 dark:text-emerald-500" />
+                  </div>
+                  <p className="text-xs text-muted-foreground sm:text-sm">순자산</p>
+                </div>
+              </div>
+              <div className="mt-3">
+                <p className="text-lg font-bold tabular-nums sm:text-2xl">
+                  {summaryStats.netAssets.toLocaleString()}
+                  <span className="ml-1 text-xs text-muted-foreground sm:text-sm">원</span>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 전월 대비 */}
+          <Card className="border-border/40 shadow-sm">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`rounded-lg p-2 ${summaryStats.netAssetsChange >= 0 ? 'bg-emerald-500/10' : 'bg-rose-500/10'}`}>
+                    {summaryStats.netAssetsChange >= 0 ? (
+                      <ArrowUpRight className="h-4 w-4 text-emerald-600 dark:text-emerald-500" />
+                    ) : (
+                      <ArrowDownRight className="h-4 w-4 text-rose-600 dark:text-rose-500" />
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground sm:text-sm">
+                    {viewMode === 'monthly' ? '전월대비' : '전년대비'}
+                  </p>
+                </div>
+              </div>
+              <div className="mt-3">
+                <p className={`text-lg font-bold tabular-nums sm:text-2xl ${
+                  summaryStats.netAssetsChange >= 0
+                    ? 'text-emerald-600 dark:text-emerald-500'
+                    : 'text-rose-600 dark:text-rose-500'
+                }`}>
+                  {summaryStats.netAssetsChange >= 0 ? '+' : ''}
+                  {summaryStats.netAssetsChange.toLocaleString()}
+                  <span className="ml-1 text-xs sm:text-sm">원</span>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 총 투자액 */}
+          <Card className="border-border/40 shadow-sm">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="rounded-lg bg-blue-500/10 p-2">
+                    <PiggyBank className="h-4 w-4 text-blue-600 dark:text-blue-500" />
+                  </div>
+                  <p className="text-xs text-muted-foreground sm:text-sm">총 투자액</p>
+                </div>
+              </div>
+              <div className="mt-3">
+                <p className="text-lg font-bold tabular-nums sm:text-2xl">
+                  {summaryStats.totalInvestment.toLocaleString()}
+                  <span className="ml-1 text-xs text-muted-foreground sm:text-sm">원</span>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* 투자 수익률 */}
+          <Card className="border-border/40 shadow-sm">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className={`rounded-lg p-2 ${summaryStats.investmentProfitRate >= 0 ? 'bg-emerald-500/10' : 'bg-rose-500/10'}`}>
+                    <TrendingUp className={`h-4 w-4 ${summaryStats.investmentProfitRate >= 0 ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`} />
+                  </div>
+                  <p className="text-xs text-muted-foreground sm:text-sm">수익률</p>
+                </div>
+              </div>
+              <div className="mt-3">
+                <p className={`text-lg font-bold tabular-nums sm:text-2xl ${
+                  summaryStats.investmentProfitRate >= 0
+                    ? 'text-emerald-600 dark:text-emerald-500'
+                    : 'text-rose-600 dark:text-rose-500'
+                }`}>
+                  {summaryStats.investmentProfitRate >= 0 ? '+' : ''}
+                  {summaryStats.investmentProfitRate.toFixed(2)}
+                  <span className="ml-1 text-xs sm:text-sm">%</span>
+                </p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Tabs */}
@@ -392,11 +505,25 @@ export function DashboardClient({
                     <TableBody>
                       {balanceData.length === 0 ? (
                         <TableRow>
-                          <TableCell
-                            colSpan={5}
-                            className="h-24 text-center text-sm text-muted-foreground"
-                          >
-                            데이터가 없습니다.
+                          <TableCell colSpan={5} className="h-64">
+                            <div className="flex flex-col items-center justify-center gap-3 text-center">
+                              <div className="rounded-full bg-muted p-4">
+                                <FileText className="h-8 w-8 text-muted-foreground" />
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-sm font-medium">자산 데이터가 없습니다</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Balance Sheet 페이지에서 자산을 추가해보세요
+                                </p>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => router.push('/balance')}
+                              >
+                                자산 추가하기
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ) : (
@@ -507,9 +634,9 @@ export function DashboardClient({
                           type="monotone"
                           dataKey="netAssets"
                           name="순자산"
-                          stroke="hsl(var(--primary))"
+                          stroke="rgb(16, 185, 129)"
                           strokeWidth={2}
-                          dot={{ r: 3, fill: 'hsl(var(--primary))' }}
+                          dot={{ r: 3, fill: 'rgb(16, 185, 129)' }}
                           activeDot={{ r: 5 }}
                         />
                       </LineChart>
@@ -549,11 +676,25 @@ export function DashboardClient({
                     <TableBody>
                       {investmentData.length === 0 ? (
                         <TableRow>
-                          <TableCell
-                            colSpan={5}
-                            className="h-24 text-center text-sm text-muted-foreground"
-                          >
-                            데이터가 없습니다.
+                          <TableCell colSpan={5} className="h-64">
+                            <div className="flex flex-col items-center justify-center gap-3 text-center">
+                              <div className="rounded-full bg-muted p-4">
+                                <PieChart className="h-8 w-8 text-muted-foreground" />
+                              </div>
+                              <div className="space-y-1">
+                                <p className="text-sm font-medium">투자 데이터가 없습니다</p>
+                                <p className="text-xs text-muted-foreground">
+                                  Investment Portfolio 페이지에서 투자를 추가해보세요
+                                </p>
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => router.push('/investment')}
+                              >
+                                투자 추가하기
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ) : (
@@ -647,9 +788,12 @@ export function DashboardClient({
                         <Bar
                           dataKey="profitRate"
                           name="수익률"
-                          fill="hsl(var(--primary))"
                           radius={[4, 4, 0, 0]}
-                        />
+                        >
+                          {investmentData.slice().reverse().map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.profitRate >= 0 ? 'rgb(16, 185, 129)' : 'rgb(244, 63, 94)'} />
+                          ))}
+                        </Bar>
                       </BarChart>
                     </ResponsiveContainer>
                   </div>

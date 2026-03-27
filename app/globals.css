@@ -58,3 +58,77 @@
     color: hsl(var(--foreground));
   }
 }
+
+/* Theme Variants */
+/* Modern Finance */
+[data-theme="modern-finance"] {
+  --theme-gradient-from: 248 250 252;
+  --theme-gradient-via: 243 232 255;
+  --theme-gradient-to: 239 246 255;
+  --theme-nav-bg: 255 255 255;
+}
+
+[data-theme="modern-finance"].dark {
+  --theme-gradient-from: 15 23 42;
+  --theme-gradient-via: 30 27 75;
+  --theme-gradient-to: 23 37 84;
+  --theme-nav-bg: 30 41 59;
+}
+
+/* Minimal Luxury */
+[data-theme="minimal-luxury"] {
+  --theme-gradient-from: 249 250 251;
+  --theme-gradient-via: 255 255 255;
+  --theme-gradient-to: 249 250 251;
+  --theme-nav-bg: 255 255 255;
+}
+
+[data-theme="minimal-luxury"].dark {
+  --theme-gradient-from: 9 9 11;
+  --theme-gradient-via: 0 0 0;
+  --theme-gradient-to: 9 9 11;
+  --theme-nav-bg: 0 0 0;
+}
+
+/* Warm & Premium */
+[data-theme="warm-premium"] {
+  --theme-gradient-from: 255 251 235;
+  --theme-gradient-via: 254 243 199;
+  --theme-gradient-to: 254 252 232;
+  --theme-nav-bg: 255 251 235;
+}
+
+[data-theme="warm-premium"].dark {
+  --theme-gradient-from: 69 26 3;
+  --theme-gradient-via: 120 53 15;
+  --theme-gradient-to: 146 64 14;
+  --theme-nav-bg: 69 26 3;
+}
+
+/* Financial Premium */
+[data-theme="financial-premium"] {
+  --theme-gradient-from: 248 250 252;
+  --theme-gradient-via: 241 245 249;
+  --theme-gradient-to: 226 232 240;
+  --theme-nav-bg: 255 255 255;
+}
+
+[data-theme="financial-premium"].dark {
+  --theme-gradient-from: 15 23 42;
+  --theme-gradient-via: 30 41 59;
+  --theme-gradient-to: 51 65 85;
+  --theme-nav-bg: 15 23 42;
+}
+
+/* Apply theme gradients */
+.theme-gradient-bg {
+  background: linear-gradient(to bottom right,
+    rgb(var(--theme-gradient-from)),
+    rgb(var(--theme-gradient-via)) 50%,
+    rgb(var(--theme-gradient-to))
+  );
+}
+
+.theme-nav-bg {
+  background-color: rgb(var(--theme-nav-bg) / 0.95);
+}

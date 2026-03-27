@@ -24,6 +24,7 @@ const navItems = [
   { href: '/balance', label: 'Balance' },
   { href: '/investment', label: 'Investment' },
   { href: '/cashflow', label: 'Cashflow' },
+  { href: '/settings', label: 'Settings' },
 ]
 
 export function Navigation({ userEmail }: NavigationProps) {
@@ -31,7 +32,7 @@ export function Navigation({ userEmail }: NavigationProps) {
   const [open, setOpen] = useState(false)
 
   return (
-    <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <div className="sticky top-0 z-50 border-b theme-nav-bg backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="flex h-14 items-center px-4 sm:px-6 lg:px-8">
         {/* Logo */}
         <div className="flex items-center gap-2">

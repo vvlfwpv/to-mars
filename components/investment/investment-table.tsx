@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2, PiggyBank, Landmark, TrendingUp, PieChart } from 'lucide-react'
 
 type InvestmentTableProps = {
   items: InvestmentItem[]
@@ -61,8 +61,18 @@ export function InvestmentTable({ items, onEdit, onDelete }: InvestmentTableProp
               <TableBody>
                 {items.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-24 text-center text-sm text-muted-foreground">
-                      등록된 항목이 없습니다.
+                    <TableCell colSpan={7} className="h-64">
+                      <div className="flex flex-col items-center justify-center gap-3 text-center">
+                        <div className="rounded-full bg-muted p-4">
+                          <PieChart className="h-8 w-8 text-muted-foreground" />
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium">등록된 항목이 없습니다</p>
+                          <p className="text-xs text-muted-foreground">
+                            상단의 "항목 추가" 버튼을 클릭하여 투자를 추가해보세요
+                          </p>
+                        </div>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : (
@@ -126,16 +136,31 @@ export function InvestmentTable({ items, onEdit, onDelete }: InvestmentTableProp
       {/* Summary Card */}
       <Card className="border-border/40 bg-muted/30 shadow-sm">
         <CardContent className="space-y-2 p-4 sm:p-6">
-          <div className="flex justify-between text-xs sm:text-sm">
-            <span className="text-muted-foreground">총 원금:</span>
+          <div className="flex items-center justify-between text-xs sm:text-sm">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-blue-500/10 p-1.5">
+                <PiggyBank className="h-3.5 w-3.5 text-blue-600 dark:text-blue-500" />
+              </div>
+              <span className="text-muted-foreground">총 원금</span>
+            </div>
             <span className="font-semibold tabular-nums">{totalPrincipal.toLocaleString()}원</span>
           </div>
-          <div className="flex justify-between text-xs sm:text-sm">
-            <span className="text-muted-foreground">총 평가액:</span>
+          <div className="flex items-center justify-between text-xs sm:text-sm">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-violet-500/10 p-1.5">
+                <Landmark className="h-3.5 w-3.5 text-violet-600 dark:text-violet-500" />
+              </div>
+              <span className="text-muted-foreground">총 평가액</span>
+            </div>
             <span className="font-semibold tabular-nums">{totalValue.toLocaleString()}원</span>
           </div>
-          <div className="flex justify-between border-t pt-2">
-            <span className="text-sm font-semibold sm:text-base">평가손익:</span>
+          <div className="flex items-center justify-between border-t pt-2">
+            <div className="flex items-center gap-2">
+              <div className={`rounded-lg p-1.5 ${profitLoss >= 0 ? 'bg-emerald-500/10' : 'bg-rose-500/10'}`}>
+                <TrendingUp className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${profitLoss >= 0 ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`} />
+              </div>
+              <span className="text-sm font-semibold sm:text-base">평가손익</span>
+            </div>
             <div className="text-right">
               <div className={`text-sm font-bold tabular-nums sm:text-base ${profitLoss >= 0 ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
                 {profitLoss >= 0 ? '+' : ''}{profitLoss.toLocaleString()}원
