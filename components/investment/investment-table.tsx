@@ -17,14 +17,17 @@ type InvestmentTableProps = {
   items: InvestmentItem[]
   onEdit: (item: InvestmentItem) => void
   onDelete: (id: string) => void
+  currentPrices?: Record<string, number>
 }
 
-export function InvestmentTable({ items, onEdit, onDelete }: InvestmentTableProps) {
+export function InvestmentTable({ items, onEdit, onDelete, currentPrices = {} }: InvestmentTableProps) {
   // 총계 계산
   const totalPrincipal = items.reduce((sum, item) => sum + Number(item.principal), 0)
   const totalValue = items.reduce((sum, item) => sum + Number(item.month_end_value), 0)
   const profitLoss = totalValue - totalPrincipal
   const profitRate = totalPrincipal > 0 ? (profitLoss / totalPrincipal) * 100 : 0
+
+  const hasPrices = Object.keys(currentPrices).length > 0
 
   return (
     <div className="space-y-4">
@@ -53,6 +56,11 @@ export function InvestmentTable({ items, onEdit, onDelete }: InvestmentTableProp
                   <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                     수량
                   </TableHead>
+                  {hasPrices && (
+                    <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                      현재가
+                    </TableHead>
+                  )}
                   <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                     액션
                   </TableHead>
@@ -61,7 +69,7 @@ export function InvestmentTable({ items, onEdit, onDelete }: InvestmentTableProp
               <TableBody>
                 {items.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="h-64">
+                    <TableCell colSpan={hasPrices ? 8 : 7} className="h-64">
                       <div className="flex flex-col items-center justify-center gap-3 text-center">
                         <div className="rounded-full bg-muted p-4">
                           <PieChart className="h-8 w-8 text-muted-foreground" />
@@ -103,6 +111,25 @@ export function InvestmentTable({ items, onEdit, onDelete }: InvestmentTableProp
                         <TableCell className="text-right text-xs tabular-nums sm:text-sm">
                           {item.quantity ? Number(item.quantity).toLocaleString() : '-'}
                         </TableCell>
+                        {hasPrices && (
+                          <TableCell className="text-right text-xs tabular-nums sm:text-sm">
+                            {currentPrices[item.id] ? (
+                              <div>
+                                <div className="text-emerald-600 dark:text-emerald-500">
+                                  {currentPrices[item.id].toLocaleString()}
+                                  <span className="ml-0.5 text-[10px] text-muted-foreground sm:text-xs">원</span>
+                                </div>
+                                {item.quantity && (
+                                  <div className="text-[10px] text-muted-foreground sm:text-xs">
+                                    → {(currentPrices[item.id] * item.quantity).toLocaleString()}원
+                                  </div>
+                                )}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">-</span>
+                            )}
+                          </TableCell>
+                        )}
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
                             <Button

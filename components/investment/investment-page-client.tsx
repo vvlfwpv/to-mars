@@ -15,20 +15,22 @@ import {
 import { InvestmentTable } from './investment-table'
 import { InvestmentFormDialog } from './investment-form-dialog'
 import { InvestmentCopyDialog } from './investment-copy-dialog'
-import { deleteInvestmentItem } from '@/lib/actions/investment'
+import { deleteInvestmentItem, updateInvestmentItem } from '@/lib/actions/investment'
 import { deleteInvestmentSnapshot } from '@/lib/actions/snapshot'
-import { Plus, Copy, Trash2, Calendar } from 'lucide-react'
+import { Plus, Copy, Trash2, Calendar, TrendingUp } from 'lucide-react'
 
 type InvestmentPageClientProps = {
   snapshot: InvestmentSnapshotWithItems
   initialYear: number
   initialMonth: number
+  isLatestSnapshot: boolean
 }
 
 export function InvestmentPageClient({
   snapshot,
   initialYear,
   initialMonth,
+  isLatestSnapshot,
 }: InvestmentPageClientProps) {
   const router = useRouter()
   const currentYear = new Date().getFullYear()
@@ -36,6 +38,8 @@ export function InvestmentPageClient({
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editItem, setEditItem] = useState<InvestmentItem | null>(null)
   const [copyDialogOpen, setCopyDialogOpen] = useState(false)
+  const [loadingPrices, setLoadingPrices] = useState(false)
+  const [currentPrices, setCurrentPrices] = useState<Record<string, number>>({})
 
   const checkSnapshotExists = async (year: number, month: number): Promise<boolean> => {
     try {
@@ -127,6 +131,99 @@ export function InvestmentPageClient({
     setDialogOpen(true)
   }
 
+  // 가격 불러오기
+  const handleFetchPrices = async () => {
+    setLoadingPrices(true)
+    setCurrentPrices({})
+
+    try {
+      // 종목코드가 있는 항목들만 필터링
+      const itemsWithCode = snapshot.investment_items.filter((item) => item.code)
+
+      // 모든 종목의 가격을 병렬로 조회
+      const pricePromises = itemsWithCode.map(async (item) => {
+        try {
+          const params = new URLSearchParams({
+            code: item.code!,
+            ...(item.name && { name: item.name }), // 종목명이 있으면 함께 전달
+          })
+          const response = await fetch(`/api/stock-price?${params}`)
+          if (!response.ok) return null
+
+          const data = await response.json()
+          return { id: item.id, code: item.code!, price: data.price }
+        } catch (error) {
+          if (process.env.NODE_ENV === 'development') {
+            console.error(`Failed to fetch price for ${item.code}:`, error)
+          }
+          return null
+        }
+      })
+
+      const results = await Promise.all(pricePromises)
+
+      // 성공한 결과만 저장
+      const prices: Record<string, number> = {}
+      results.forEach((result) => {
+        if (result && result.price) {
+          prices[result.id] = result.price
+        }
+      })
+
+      setCurrentPrices(prices)
+
+      if (Object.keys(prices).length === 0) {
+        toast.error('가격을 불러올 수 없습니다.')
+      } else {
+        toast.success(`${Object.keys(prices).length}개 종목의 가격을 불러왔습니다.`)
+      }
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to fetch prices:', error)
+      }
+      toast.error('가격 조회에 실패했습니다.')
+    } finally {
+      setLoadingPrices(false)
+    }
+  }
+
+  // 일괄 적용
+  const handleApplyPrices = async () => {
+    if (Object.keys(currentPrices).length === 0) {
+      toast.error('적용할 가격 정보가 없습니다.')
+      return
+    }
+
+    if (!confirm('현재 가격으로 월말평가액을 일괄 업데이트하시겠습니까?')) {
+      return
+    }
+
+    try {
+      // 가격 정보가 있는 항목들만 업데이트
+      const updatePromises = Object.entries(currentPrices).map(([itemId, price]) => {
+        const item = snapshot.investment_items.find((i) => i.id === itemId)
+        if (!item || !item.quantity) return null
+
+        const newMonthEndValue = price * item.quantity
+
+        return updateInvestmentItem(itemId, {
+          month_end_value: newMonthEndValue,
+        })
+      })
+
+      await Promise.all(updatePromises.filter(Boolean))
+
+      toast.success('월말평가액이 업데이트되었습니다.')
+      setCurrentPrices({})
+      router.refresh()
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to apply prices:', error)
+      }
+      toast.error('업데이트에 실패했습니다.')
+    }
+  }
+
   return (
     <div className="min-h-screen theme-gradient-bg">
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -152,6 +249,33 @@ export function InvestmentPageClient({
                 <Copy className="h-4 w-4 sm:mr-2" />
                 <span className="hidden sm:inline">다음 달로 복사</span>
               </Button>
+              {isLatestSnapshot && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleFetchPrices}
+                    disabled={loadingPrices}
+                    className="text-emerald-600 hover:text-emerald-700 dark:text-emerald-500 dark:hover:text-emerald-400"
+                  >
+                    <TrendingUp className="h-4 w-4 sm:mr-2" />
+                    <span className="hidden sm:inline">
+                      {loadingPrices ? '조회 중...' : '가격 불러오기'}
+                    </span>
+                  </Button>
+                  {Object.keys(currentPrices).length > 0 && (
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={handleApplyPrices}
+                      className="bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-600 dark:hover:bg-emerald-700"
+                    >
+                      <TrendingUp className="h-4 w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">일괄 적용</span>
+                    </Button>
+                  )}
+                </>
+              )}
               <Button
                 variant="outline"
                 size="sm"
@@ -199,6 +323,7 @@ export function InvestmentPageClient({
           items={snapshot.investment_items}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          currentPrices={currentPrices}
         />
 
         <InvestmentFormDialog
