@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { fetchExchangeRate } from '@/lib/services/exchange-rate'
-import { EXCHANGE_RATE_API_CONFIG } from '@/lib/constants/investment'
 
 /**
  * USD -> KRW 환율 조회 API 엔드포인트
@@ -35,5 +34,5 @@ export async function GET() {
   }
 }
 
-// Next.js 캐싱 설정
-export const revalidate = EXCHANGE_RATE_API_CONFIG.CACHE_DURATION
+// Next.js 캐싱 설정 (5분)
+export const revalidate = 300
