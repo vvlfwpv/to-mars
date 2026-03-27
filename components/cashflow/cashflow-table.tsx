@@ -4,7 +4,7 @@ import { CashflowItem } from '@/types/cashflow'
 import { Owner } from '@/types/owner'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2, Wallet, CreditCard, PiggyBank, TrendingUp } from 'lucide-react'
 
 type CashflowTableProps = {
   items: CashflowItem[]
@@ -55,9 +55,64 @@ export function CashflowTable({ items, owners, onEdit, onDelete }: CashflowTable
   const savingsRate = totalIncome > 0 ? (savings / totalIncome) * 100 : 0
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col gap-6">
+      {/* Summary Card - Mobile First */}
+      <Card className="order-1 border-border/40 bg-muted/30 shadow-sm md:order-2">
+        <CardContent className="space-y-2 p-4 sm:p-6">
+          <div className="flex items-center justify-between text-xs sm:text-sm">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-emerald-500/10 p-1.5">
+                <Wallet className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-500" />
+              </div>
+              <span className="text-muted-foreground">총 수입</span>
+            </div>
+            <span className="font-semibold tabular-nums text-emerald-600 dark:text-emerald-500">
+              {totalIncome.toLocaleString()}원
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-xs sm:text-sm">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-rose-500/10 p-1.5">
+                <CreditCard className="h-3.5 w-3.5 text-rose-600 dark:text-rose-500" />
+              </div>
+              <span className="text-muted-foreground">총 고정비</span>
+            </div>
+            <span className="font-semibold tabular-nums text-rose-600 dark:text-rose-500">
+              {totalFixedExpense.toLocaleString()}원
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-xs sm:text-sm">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-blue-500/10 p-1.5">
+                <PiggyBank className="h-3.5 w-3.5 text-blue-600 dark:text-blue-500" />
+              </div>
+              <span className="text-muted-foreground">총 비유동투자</span>
+            </div>
+            <span className="font-semibold tabular-nums text-blue-600 dark:text-blue-500">
+              {totalInvestment.toLocaleString()}원
+            </span>
+          </div>
+          <div className="flex items-center justify-between border-t pt-2">
+            <div className="flex items-center gap-2">
+              <div className="rounded-lg bg-violet-500/10 p-1.5">
+                <TrendingUp className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-violet-600 dark:text-violet-500" />
+              </div>
+              <span className="text-sm font-semibold sm:text-base">저축액</span>
+            </div>
+            <div className="text-right">
+              <div className="text-sm font-bold tabular-nums sm:text-base">
+                {savings.toLocaleString()}원
+              </div>
+              <div className="text-xs text-muted-foreground sm:text-sm">
+                저축률: {savingsRate.toFixed(1)}%
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Owner Cards */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="order-2 grid grid-cols-1 gap-4 md:order-1 md:grid-cols-2 lg:grid-cols-3">
         {owners.map((owner) => {
           const data = ownerDataMap.get(owner.name)
           if (!data) return null
@@ -212,41 +267,6 @@ export function CashflowTable({ items, owners, onEdit, onDelete }: CashflowTable
           )
         })}
       </div>
-
-      {/* Summary Card */}
-      <Card className="border-border/40 bg-muted/30 shadow-sm">
-        <CardContent className="space-y-2 p-4 sm:p-6">
-          <div className="flex justify-between text-xs sm:text-sm">
-            <span className="text-muted-foreground">총 수입:</span>
-            <span className="font-semibold tabular-nums text-emerald-600 dark:text-emerald-500">
-              {totalIncome.toLocaleString()}원
-            </span>
-          </div>
-          <div className="flex justify-between text-xs sm:text-sm">
-            <span className="text-muted-foreground">총 고정비:</span>
-            <span className="font-semibold tabular-nums text-rose-600 dark:text-rose-500">
-              {totalFixedExpense.toLocaleString()}원
-            </span>
-          </div>
-          <div className="flex justify-between text-xs sm:text-sm">
-            <span className="text-muted-foreground">총 비유동투자:</span>
-            <span className="font-semibold tabular-nums text-blue-600 dark:text-blue-500">
-              {totalInvestment.toLocaleString()}원
-            </span>
-          </div>
-          <div className="flex justify-between border-t pt-2">
-            <span className="text-sm font-semibold sm:text-base">저축액:</span>
-            <div className="text-right">
-              <div className="text-sm font-bold tabular-nums sm:text-base">
-                {savings.toLocaleString()}원
-              </div>
-              <div className="text-xs text-muted-foreground sm:text-sm">
-                저축률: {savingsRate.toFixed(1)}%
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }
