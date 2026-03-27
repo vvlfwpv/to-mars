@@ -1,5 +1,10 @@
 import { UUID, Timestamp } from './database'
 
+/**
+ * 지원하는 통화 타입
+ */
+export type Currency = 'KRW' | 'USD'
+
 export type InvestmentSnapshot = {
   id: UUID
   group_id: UUID
@@ -18,7 +23,7 @@ export type InvestmentItem = {
   principal: number        // 원금 (currency에 따라 원 또는 달러)
   month_end_value: number  // 월말평가액 (currency에 따라 원 또는 달러)
   quantity: number | null  // 보유수량
-  currency: string         // 통화 (KRW 또는 USD)
+  currency: Currency       // 통화 (KRW 또는 USD)
   created_at: Timestamp
 }
 

@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createServerClient } from '@/lib/supabase/client'
 import type { CreateBalanceItemInput } from '@/types/balance'
 import type { CreateInvestmentItemInput } from '@/types/investment'
+import { fetchExchangeRate } from '@/lib/services/exchange-rate'
 
 /**
  * Balance Snapshot을 다음 달로 복사
@@ -126,20 +127,7 @@ export async function copyInvestmentSnapshotToNextMonth(
     snapshotId = existingSnapshot.id
   } else {
     // 환율 조회
-    let exchangeRate: number | null = null
-    try {
-      const response = await fetch('https://open.er-api.com/v6/latest/USD', {
-        headers: { 'User-Agent': 'Mozilla/5.0' },
-      })
-      if (response.ok) {
-        const data = await response.json()
-        exchangeRate = data?.rates?.KRW || null
-      }
-    } catch (error) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Failed to fetch exchange rate during copy:', error)
-      }
-    }
+    const exchangeRate = await fetchExchangeRate()
 
     // 새 스냅샷 생성
     const { data: newSnapshot, error: snapshotError } = await supabase

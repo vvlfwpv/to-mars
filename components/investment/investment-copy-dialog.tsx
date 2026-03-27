@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { copyInvestmentSnapshotToNextMonth } from '@/lib/actions/snapshot'
 import { Plus, Trash2 } from 'lucide-react'
+import { DEFAULT_CURRENCY } from '@/lib/constants/investment'
 
 type InvestmentCopyDialogProps = {
   open: boolean
@@ -86,7 +87,7 @@ export function InvestmentCopyDialog({
       principal: 0,
       month_end_value: 0,
       quantity: null,
-      currency: 'KRW',
+      currency: DEFAULT_CURRENCY,
       selected: true,
     }
     setCopyItems((prev) => [...prev, newItem])

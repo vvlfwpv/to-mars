@@ -36,15 +36,11 @@ import {
 import { TrendingUp, TrendingDown, Calendar, CalendarDays, Wallet, PiggyBank, ArrowUpRight, ArrowDownRight, FileText, PieChart } from 'lucide-react'
 import type { BalanceSnapshotWithItems } from '@/types/balance'
 import type { InvestmentSnapshotWithItems } from '@/types/investment'
+import { determineCurrency, convertToKRW } from '@/lib/utils/currency'
 
 type DashboardClientProps = {
   balanceSnapshots: BalanceSnapshotWithItems[]
   investmentSnapshots: InvestmentSnapshotWithItems[]
-}
-
-type YearMonth = {
-  year: number
-  month: number
 }
 
 export function DashboardClient({
@@ -201,15 +197,15 @@ export function DashboardClient({
 
       // 환율 적용하여 원화로 환산
       const totalPrincipal = snapshot.investment_items.reduce((sum, item) => {
-        const currency = item.currency || (['해외주식', '해외ETF'].includes(item.category) ? 'USD' : 'KRW')
+        const currency = determineCurrency(item)
         const value = Number(item.principal)
-        return sum + (currency === 'USD' && exchangeRate ? value * exchangeRate : value)
+        return sum + convertToKRW(value, currency, exchangeRate)
       }, 0)
 
       const totalValue = snapshot.investment_items.reduce((sum, item) => {
-        const currency = item.currency || (['해외주식', '해외ETF'].includes(item.category) ? 'USD' : 'KRW')
+        const currency = determineCurrency(item)
         const value = Number(item.month_end_value)
-        return sum + (currency === 'USD' && exchangeRate ? value * exchangeRate : value)
+        return sum + convertToKRW(value, currency, exchangeRate)
       }, 0)
 
       const profitLoss = totalValue - totalPrincipal

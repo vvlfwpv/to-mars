@@ -32,6 +32,8 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { createInvestmentItem, updateInvestmentItem } from '@/lib/actions/investment'
+import { determineCurrency } from '@/lib/utils/currency'
+import { CURRENCY, DEFAULT_CURRENCY } from '@/lib/constants/investment'
 
 const formSchema = z.object({
   category: z.string().min(1, '대분류를 입력해주세요'),
@@ -40,7 +42,7 @@ const formSchema = z.object({
   principal: z.number({ message: '숫자를 입력해주세요' }).positive('원금은 0보다 커야 합니다'),
   month_end_value: z.number({ message: '숫자를 입력해주세요' }).nonnegative('월말평가액은 0 이상이어야 합니다'),
   quantity: z.number().optional(),
-  currency: z.enum(['KRW', 'USD']),
+  currency: z.enum([CURRENCY.KRW, CURRENCY.USD]),
 })
 
 type FormValues = z.infer<typeof formSchema>
@@ -69,14 +71,13 @@ export function InvestmentFormDialog({
       principal: 0,
       month_end_value: 0,
       quantity: undefined,
-      currency: 'KRW',
+      currency: DEFAULT_CURRENCY,
     },
   })
 
   useEffect(() => {
     if (editItem) {
-      // currency가 없으면 카테고리로 판단
-      const itemCurrency = editItem.currency || (['해외주식', '해외ETF'].includes(editItem.category) ? 'USD' : 'KRW')
+      const itemCurrency = determineCurrency(editItem)
       form.reset({
         category: editItem.category,
         code: editItem.code || '',
@@ -84,7 +85,7 @@ export function InvestmentFormDialog({
         principal: editItem.principal,
         month_end_value: editItem.month_end_value,
         quantity: editItem.quantity || undefined,
-        currency: itemCurrency as 'KRW' | 'USD',
+        currency: itemCurrency,
       })
     } else {
       form.reset({
@@ -94,7 +95,7 @@ export function InvestmentFormDialog({
         principal: 0,
         month_end_value: 0,
         quantity: undefined,
-        currency: 'KRW',
+        currency: DEFAULT_CURRENCY,
       })
     }
   }, [editItem, open, form])
@@ -168,8 +169,8 @@ export function InvestmentFormDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="KRW">KRW (원)</SelectItem>
-                        <SelectItem value="USD">USD (달러)</SelectItem>
+                        <SelectItem value={CURRENCY.KRW}>{CURRENCY.KRW} (원)</SelectItem>
+                        <SelectItem value={CURRENCY.USD}>{CURRENCY.USD} (달러)</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

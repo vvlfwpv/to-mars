@@ -1,38 +1,19 @@
 import { NextResponse } from 'next/server'
+import { fetchExchangeRate } from '@/lib/services/exchange-rate'
+import { EXCHANGE_RATE_API_CONFIG } from '@/lib/constants/investment'
 
 /**
- * USD -> KRW 환율 조회
+ * USD -> KRW 환율 조회 API 엔드포인트
  * 무료 API: https://www.exchangerate-api.com/
+ * 5분 캐싱 적용
  */
 export async function GET() {
   try {
-    // Open Exchange Rates API (무료, API 키 불필요)
-    const response = await fetch('https://open.er-api.com/v6/latest/USD', {
-      headers: {
-        'User-Agent': 'Mozilla/5.0',
-      },
-      // 5분 캐싱
-      next: { revalidate: 300 },
-    })
+    const usdToKrw = await fetchExchangeRate()
 
-    if (!response.ok) {
-      if (process.env.NODE_ENV === 'development') {
-        console.error('Failed to fetch exchange rate:', response.status)
-      }
+    if (!usdToKrw) {
       return NextResponse.json(
         { error: 'Failed to fetch exchange rate' },
-        { status: 500 }
-      )
-    }
-
-    const data = await response.json()
-
-    // USD -> KRW 환율 추출
-    const usdToKrw = data?.rates?.KRW
-
-    if (typeof usdToKrw !== 'number') {
-      return NextResponse.json(
-        { error: 'Invalid exchange rate data' },
         { status: 500 }
       )
     }
@@ -53,3 +34,6 @@ export async function GET() {
     )
   }
 }
+
+// Next.js 캐싱 설정
+export const revalidate = EXCHANGE_RATE_API_CONFIG.CACHE_DURATION

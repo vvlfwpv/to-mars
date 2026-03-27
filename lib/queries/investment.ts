@@ -1,6 +1,7 @@
 import { createServerClient } from '@/lib/supabase/client'
 import type { InvestmentSnapshot, InvestmentSnapshotWithItems } from '@/types/investment'
 import { getCurrentUserGroupId } from './group'
+import { fetchExchangeRate } from '@/lib/services/exchange-rate'
 
 /**
  * 특정 년월의 Investment Snapshot 조회 (items 포함)
@@ -108,20 +109,7 @@ export async function createInvestmentSnapshot(
   const groupId = await getCurrentUserGroupId()
 
   // 환율 조회
-  let exchangeRate: number | null = null
-  try {
-    const response = await fetch('https://open.er-api.com/v6/latest/USD', {
-      headers: { 'User-Agent': 'Mozilla/5.0' },
-    })
-    if (response.ok) {
-      const data = await response.json()
-      exchangeRate = data?.rates?.KRW || null
-    }
-  } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Failed to fetch exchange rate during snapshot creation:', error)
-    }
-  }
+  const exchangeRate = await fetchExchangeRate()
 
   const { data, error } = await supabase
     .from('investment_snapshots')

@@ -12,6 +12,8 @@ import {
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Pencil, Trash2, PiggyBank, Landmark, TrendingUp, PieChart } from 'lucide-react'
+import { determineCurrency, convertToKRW, formatAmount, getCurrencySymbol } from '@/lib/utils/currency'
+import type { Currency } from '@/lib/constants/investment'
 
 type InvestmentTableProps = {
   items: InvestmentItem[]
@@ -24,7 +26,7 @@ type InvestmentTableProps = {
 export function InvestmentTable({ items, onEdit, onDelete, currentPrices = {}, exchangeRate = null }: InvestmentTableProps) {
   // 대분류별 합계 계산
   const categoryStats = items.reduce((acc, item) => {
-    const currency = item.currency || (['해외주식', '해외ETF'].includes(item.category) ? 'USD' : 'KRW')
+    const currency = determineCurrency(item)
     const category = item.category
 
     if (!acc[category]) {
@@ -39,29 +41,29 @@ export function InvestmentTable({ items, onEdit, onDelete, currentPrices = {}, e
     acc[category].value += Number(item.month_end_value)
 
     return acc
-  }, {} as Record<string, { principal: number; value: number; currency: string }>)
+  }, {} as Record<string, { principal: number; value: number; currency: Currency }>)
 
   // 통화별 합계 계산
   const krwPrincipal = items.reduce((sum, item) => {
-    const currency = item.currency || (['해외주식', '해외ETF'].includes(item.category) ? 'USD' : 'KRW')
+    const currency = determineCurrency(item)
     return sum + (currency === 'KRW' ? Number(item.principal) : 0)
   }, 0)
   const usdPrincipal = items.reduce((sum, item) => {
-    const currency = item.currency || (['해외주식', '해외ETF'].includes(item.category) ? 'USD' : 'KRW')
+    const currency = determineCurrency(item)
     return sum + (currency === 'USD' ? Number(item.principal) : 0)
   }, 0)
   const krwValue = items.reduce((sum, item) => {
-    const currency = item.currency || (['해외주식', '해외ETF'].includes(item.category) ? 'USD' : 'KRW')
+    const currency = determineCurrency(item)
     return sum + (currency === 'KRW' ? Number(item.month_end_value) : 0)
   }, 0)
   const usdValue = items.reduce((sum, item) => {
-    const currency = item.currency || (['해외주식', '해외ETF'].includes(item.category) ? 'USD' : 'KRW')
+    const currency = determineCurrency(item)
     return sum + (currency === 'USD' ? Number(item.month_end_value) : 0)
   }, 0)
 
   // 총계 (원화 환산)
-  const totalPrincipal = krwPrincipal + (exchangeRate ? usdPrincipal * exchangeRate : 0)
-  const totalValue = krwValue + (exchangeRate ? usdValue * exchangeRate : 0)
+  const totalPrincipal = krwPrincipal + convertToKRW(usdPrincipal, 'USD', exchangeRate)
+  const totalValue = krwValue + convertToKRW(usdValue, 'USD', exchangeRate)
   const profitLoss = totalValue - totalPrincipal
   const profitRate = totalPrincipal > 0 ? (profitLoss / totalPrincipal) * 100 : 0
 
@@ -128,8 +130,7 @@ export function InvestmentTable({ items, onEdit, onDelete, currentPrices = {}, e
                       ? (itemProfit / Number(item.principal)) * 100
                       : 0
 
-                    // currency 필드가 없으면 카테고리로 판단
-                    const itemCurrency = item.currency || (['해외주식', '해외ETF'].includes(item.category) ? 'USD' : 'KRW')
+                    const itemCurrency = determineCurrency(item)
 
                     return (
                       <TableRow key={item.id} className="border-border/40">
@@ -138,25 +139,25 @@ export function InvestmentTable({ items, onEdit, onDelete, currentPrices = {}, e
                         <TableCell className="text-xs sm:text-sm">{item.name}</TableCell>
                         <TableCell className="text-right text-xs tabular-nums sm:text-sm">
                           <div>
-                            {itemCurrency === 'USD' && <span className="mr-0.5 text-[10px] text-muted-foreground sm:text-xs">$</span>}
-                            {Math.floor(Number(item.principal)).toLocaleString()}
-                            {itemCurrency === 'KRW' && <span className="ml-0.5 text-[10px] text-muted-foreground sm:text-xs">원</span>}
+                            {itemCurrency === 'USD' && <span className="mr-0.5 text-[10px] text-muted-foreground sm:text-xs">{getCurrencySymbol(itemCurrency)}</span>}
+                            {formatAmount(Number(item.principal))}
+                            {itemCurrency === 'KRW' && <span className="ml-0.5 text-[10px] text-muted-foreground sm:text-xs">{getCurrencySymbol(itemCurrency)}</span>}
                           </div>
                           {itemCurrency === 'USD' && exchangeRate && (
                             <div className="text-[10px] text-muted-foreground sm:text-xs">
-                              ≈ {Math.floor(Number(item.principal) * exchangeRate).toLocaleString()}원
+                              ≈ {formatAmount(convertToKRW(Number(item.principal), itemCurrency, exchangeRate))}원
                             </div>
                           )}
                         </TableCell>
                         <TableCell className="text-right text-xs tabular-nums sm:text-sm">
                           <div>
-                            {itemCurrency === 'USD' && <span className="mr-0.5 text-[10px] text-muted-foreground sm:text-xs">$</span>}
-                            {Math.floor(Number(item.month_end_value)).toLocaleString()}
-                            {itemCurrency === 'KRW' && <span className="ml-0.5 text-[10px] text-muted-foreground sm:text-xs">원</span>}
+                            {itemCurrency === 'USD' && <span className="mr-0.5 text-[10px] text-muted-foreground sm:text-xs">{getCurrencySymbol(itemCurrency)}</span>}
+                            {formatAmount(Number(item.month_end_value))}
+                            {itemCurrency === 'KRW' && <span className="ml-0.5 text-[10px] text-muted-foreground sm:text-xs">{getCurrencySymbol(itemCurrency)}</span>}
                           </div>
                           {itemCurrency === 'USD' && exchangeRate && (
                             <div className="text-[10px] text-muted-foreground sm:text-xs">
-                              ≈ {Math.floor(Number(item.month_end_value) * exchangeRate).toLocaleString()}원
+                              ≈ {formatAmount(convertToKRW(Number(item.month_end_value), itemCurrency, exchangeRate))}원
                             </div>
                           )}
                           <div className={`text-[10px] sm:text-xs ${itemProfit >= 0 ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
@@ -171,18 +172,18 @@ export function InvestmentTable({ items, onEdit, onDelete, currentPrices = {}, e
                             {currentPrices[item.id] ? (
                               <div>
                                 <div className="text-emerald-600 dark:text-emerald-500">
-                                  {itemCurrency === 'USD' && <span className="mr-0.5 text-[10px] sm:text-xs">$</span>}
-                                  {Math.floor(currentPrices[item.id]).toLocaleString()}
-                                  {itemCurrency === 'KRW' && <span className="ml-0.5 text-[10px] sm:text-xs">원</span>}
+                                  {itemCurrency === 'USD' && <span className="mr-0.5 text-[10px] sm:text-xs">{getCurrencySymbol(itemCurrency)}</span>}
+                                  {formatAmount(currentPrices[item.id])}
+                                  {itemCurrency === 'KRW' && <span className="ml-0.5 text-[10px] sm:text-xs">{getCurrencySymbol(itemCurrency)}</span>}
                                 </div>
                                 {item.quantity && (
                                   <div className="text-[10px] text-muted-foreground sm:text-xs">
-                                    → {itemCurrency === 'USD' && '$'}{Math.floor(currentPrices[item.id] * item.quantity).toLocaleString()}{itemCurrency === 'KRW' && '원'}
+                                    → {itemCurrency === 'USD' && getCurrencySymbol(itemCurrency)}{formatAmount(currentPrices[item.id] * item.quantity)}{itemCurrency === 'KRW' && getCurrencySymbol(itemCurrency)}
                                   </div>
                                 )}
                                 {itemCurrency === 'USD' && exchangeRate && item.quantity && (
                                   <div className="text-[10px] text-muted-foreground sm:text-xs">
-                                    ≈ {Math.floor(currentPrices[item.id] * item.quantity * exchangeRate).toLocaleString()}원
+                                    ≈ {formatAmount(convertToKRW(currentPrices[item.id] * item.quantity, itemCurrency, exchangeRate))}원
                                   </div>
                                 )}
                               </div>
@@ -228,7 +229,7 @@ export function InvestmentTable({ items, onEdit, onDelete, currentPrices = {}, e
           {exchangeRate && (
             <div className="flex items-center justify-center rounded-lg bg-amber-500/10 px-3 py-2">
               <span className="text-xs font-medium text-amber-700 dark:text-amber-400 sm:text-sm">
-                환율: 1 USD = {Math.floor(exchangeRate).toLocaleString()}원
+                환율: 1 USD = {formatAmount(exchangeRate)}원
               </span>
             </div>
           )}
@@ -241,15 +242,15 @@ export function InvestmentTable({ items, onEdit, onDelete, currentPrices = {}, e
                   <span className="font-medium text-muted-foreground">{category}</span>
                   <div className="flex gap-3 tabular-nums">
                     <span>
-                      {stats.currency === 'USD' && '$'}
-                      {Math.floor(stats.principal).toLocaleString()}
-                      {stats.currency === 'KRW' && '원'}
+                      {stats.currency === 'USD' && getCurrencySymbol(stats.currency)}
+                      {formatAmount(stats.principal)}
+                      {stats.currency === 'KRW' && getCurrencySymbol(stats.currency)}
                     </span>
                     <span className="text-muted-foreground">→</span>
                     <span className="font-semibold">
-                      {stats.currency === 'USD' && '$'}
-                      {Math.floor(stats.value).toLocaleString()}
-                      {stats.currency === 'KRW' && '원'}
+                      {stats.currency === 'USD' && getCurrencySymbol(stats.currency)}
+                      {formatAmount(stats.value)}
+                      {stats.currency === 'KRW' && getCurrencySymbol(stats.currency)}
                     </span>
                   </div>
                 </div>
@@ -265,7 +266,7 @@ export function InvestmentTable({ items, onEdit, onDelete, currentPrices = {}, e
               </div>
               <span className="text-muted-foreground">총 원금</span>
             </div>
-            <span className="font-semibold tabular-nums">{Math.floor(totalPrincipal).toLocaleString()}원</span>
+            <span className="font-semibold tabular-nums">{formatAmount(totalPrincipal)}원</span>
           </div>
 
           {/* 총 평가액 */}
@@ -276,7 +277,7 @@ export function InvestmentTable({ items, onEdit, onDelete, currentPrices = {}, e
               </div>
               <span className="text-muted-foreground">총 평가액</span>
             </div>
-            <span className="font-semibold tabular-nums">{Math.floor(totalValue).toLocaleString()}원</span>
+            <span className="font-semibold tabular-nums">{formatAmount(totalValue)}원</span>
           </div>
 
           {/* 평가손익 */}
@@ -289,7 +290,7 @@ export function InvestmentTable({ items, onEdit, onDelete, currentPrices = {}, e
             </div>
             <div className="text-right">
               <div className={`text-sm font-bold tabular-nums sm:text-base ${profitLoss >= 0 ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
-                {profitLoss >= 0 ? '+' : ''}{Math.floor(profitLoss).toLocaleString()}원
+                {profitLoss >= 0 ? '+' : ''}{formatAmount(profitLoss)}원
               </div>
               <div className={`text-xs tabular-nums sm:text-sm ${profitLoss >= 0 ? 'text-emerald-600/80 dark:text-emerald-500/80' : 'text-rose-600/80 dark:text-rose-500/80'}`}>
                 ({profitLoss >= 0 ? '+' : ''}{profitRate.toFixed(2)}%)

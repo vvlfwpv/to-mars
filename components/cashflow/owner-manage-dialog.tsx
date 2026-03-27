@@ -98,6 +98,7 @@ export function OwnerManageDialog({
       // 임시 owner 추가 (실제 ID는 서버에서 생성되지만, 다이얼로그를 닫을 때 refresh됨)
       const tempOwner: Owner = {
         id: `temp-${Date.now()}`,
+        group_id: 'temp', // 임시값, refresh 시 실제값으로 교체됨
         name: newOwnerName.trim(),
         created_at: new Date().toISOString(),
       }
