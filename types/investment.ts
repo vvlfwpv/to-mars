@@ -2,6 +2,7 @@ import { UUID, Timestamp } from './database'
 
 export type InvestmentSnapshot = {
   id: UUID
+  group_id: UUID
   year: number
   month: number
   created_at: Timestamp

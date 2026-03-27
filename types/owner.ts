@@ -1,5 +1,6 @@
 export type Owner = {
   id: string
+  group_id: string
   name: string
   created_at: string
 }

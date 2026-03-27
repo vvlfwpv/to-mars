@@ -4,6 +4,7 @@ export type CashflowCategory = '수입' | '고정비' | '비유동투자'
 
 export type CashflowItem = {
   id: UUID
+  group_id: UUID
   owner: string            // 다은, 필제, 공동 (자유입력)
   category: CashflowCategory
   item_name: string        // 근로소득, 보험료 등

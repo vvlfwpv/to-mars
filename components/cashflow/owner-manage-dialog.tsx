@@ -64,7 +64,9 @@ export function OwnerManageDialog({
       setEditingId(null)
       setEditingName('')
     } catch (error) {
-      console.error('Failed to update owner:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to update owner:', error)
+      }
       toast.error('수정에 실패했습니다.')
     }
   }
@@ -78,7 +80,9 @@ export function OwnerManageDialog({
       setOwners((prev) => prev.filter((o) => o.id !== id))
       toast.success('삭제되었습니다.')
     } catch (error) {
-      console.error('Failed to delete owner:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to delete owner:', error)
+      }
       toast.error('삭제에 실패했습니다. 해당 소유자를 사용 중인 항목이 있을 수 있습니다.')
     }
   }
@@ -102,7 +106,9 @@ export function OwnerManageDialog({
       setNewOwnerName('')
       setIsAdding(false)
     } catch (error) {
-      console.error('Failed to create owner:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to create owner:', error)
+      }
       toast.error('추가에 실패했습니다.')
     }
   }

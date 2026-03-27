@@ -44,7 +44,9 @@ export function CashflowPageClient({ items, owners }: CashflowPageClientProps) {
       toast.success('삭제되었습니다.')
       router.refresh()
     } catch (error) {
-      console.error('Failed to delete item:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to delete item:', error)
+      }
       toast.error('삭제에 실패했습니다.')
     }
   }

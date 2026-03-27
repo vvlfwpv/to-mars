@@ -150,7 +150,9 @@ export function BalanceCopyDialog({
       router.refresh()
       onOpenChange(false)
     } catch (error: any) {
-      console.error('Failed to copy snapshot:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to copy snapshot:', error)
+      }
       toast.error(error.message || '복사에 실패했습니다.')
     } finally {
       setLoading(false)

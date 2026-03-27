@@ -1,5 +1,6 @@
 import { createServerClient } from '@/lib/supabase/client'
 import type { BalanceSnapshot, BalanceSnapshotWithItems } from '@/types/balance'
+import { getCurrentUserGroupId } from './group'
 
 /**
  * 특정 년월의 Balance Snapshot 조회 (items 포함)
@@ -10,12 +11,16 @@ export async function getBalanceSnapshot(
 ): Promise<BalanceSnapshotWithItems | null> {
   const supabase = await createServerClient()
 
+  // Get current user's group
+  const groupId = await getCurrentUserGroupId()
+
   const { data, error } = await supabase
     .from('balance_snapshots')
     .select(`
       *,
       balance_items (*)
     `)
+    .eq('group_id', groupId)
     .eq('year', year)
     .eq('month', month)
     .order('created_at', { referencedTable: 'balance_items', ascending: true })
@@ -38,9 +43,13 @@ export async function getBalanceSnapshot(
 export async function getAllBalanceSnapshots(): Promise<BalanceSnapshot[]> {
   const supabase = await createServerClient()
 
+  // Get current user's group
+  const groupId = await getCurrentUserGroupId()
+
   const { data, error } = await supabase
     .from('balance_snapshots')
     .select('*')
+    .eq('group_id', groupId)
     .order('year', { ascending: false })
     .order('month', { ascending: false })
 
@@ -55,10 +64,14 @@ export async function getAllBalanceSnapshots(): Promise<BalanceSnapshot[]> {
 export async function getAllBalanceSnapshotsWithItems(): Promise<BalanceSnapshotWithItems[]> {
   const supabase = await createServerClient()
 
+  // Get current user's group
+  const groupId = await getCurrentUserGroupId()
+
   const { data, error } = await supabase
     .from('balance_snapshots')
     .select(`
       id,
+      group_id,
       year,
       month,
       created_at,
@@ -70,6 +83,7 @@ export async function getAllBalanceSnapshotsWithItems(): Promise<BalanceSnapshot
         category_level3
       )
     `)
+    .eq('group_id', groupId)
     .order('year', { ascending: false })
     .order('month', { ascending: false })
 
@@ -87,9 +101,12 @@ export async function createBalanceSnapshot(
 ): Promise<BalanceSnapshot> {
   const supabase = await createServerClient()
 
+  // Get current user's group
+  const groupId = await getCurrentUserGroupId()
+
   const { data, error } = await supabase
     .from('balance_snapshots')
-    .insert({ year, month })
+    .insert({ group_id: groupId, year, month })
     .select()
     .single()
 

@@ -243,7 +243,9 @@ export function DashboardClient({
       const data = await response.json()
       return data.exists
     } catch (error) {
-      console.error('Failed to check snapshot:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to check snapshot:', error)
+      }
       return false
     }
   }
@@ -259,7 +261,9 @@ export function DashboardClient({
       const data = await response.json()
       return data.exists
     } catch (error) {
-      console.error('Failed to check snapshot:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to check snapshot:', error)
+      }
       return false
     }
   }

@@ -1,5 +1,6 @@
 import { createServerClient } from '@/lib/supabase/client'
 import type { InvestmentSnapshot, InvestmentSnapshotWithItems } from '@/types/investment'
+import { getCurrentUserGroupId } from './group'
 
 /**
  * 특정 년월의 Investment Snapshot 조회 (items 포함)
@@ -10,12 +11,16 @@ export async function getInvestmentSnapshot(
 ): Promise<InvestmentSnapshotWithItems | null> {
   const supabase = await createServerClient()
 
+  // Get current user's group
+  const groupId = await getCurrentUserGroupId()
+
   const { data, error } = await supabase
     .from('investment_snapshots')
     .select(`
       *,
       investment_items (*)
     `)
+    .eq('group_id', groupId)
     .eq('year', year)
     .eq('month', month)
     .order('created_at', { referencedTable: 'investment_items', ascending: true })
@@ -37,9 +42,13 @@ export async function getInvestmentSnapshot(
 export async function getAllInvestmentSnapshots(): Promise<InvestmentSnapshot[]> {
   const supabase = await createServerClient()
 
+  // Get current user's group
+  const groupId = await getCurrentUserGroupId()
+
   const { data, error } = await supabase
     .from('investment_snapshots')
     .select('*')
+    .eq('group_id', groupId)
     .order('year', { ascending: false })
     .order('month', { ascending: false })
 
@@ -54,10 +63,14 @@ export async function getAllInvestmentSnapshots(): Promise<InvestmentSnapshot[]>
 export async function getAllInvestmentSnapshotsWithItems(): Promise<InvestmentSnapshotWithItems[]> {
   const supabase = await createServerClient()
 
+  // Get current user's group
+  const groupId = await getCurrentUserGroupId()
+
   const { data, error } = await supabase
     .from('investment_snapshots')
     .select(`
       id,
+      group_id,
       year,
       month,
       created_at,
@@ -71,6 +84,7 @@ export async function getAllInvestmentSnapshotsWithItems(): Promise<InvestmentSn
         quantity
       )
     `)
+    .eq('group_id', groupId)
     .order('year', { ascending: false })
     .order('month', { ascending: false })
 
@@ -88,9 +102,12 @@ export async function createInvestmentSnapshot(
 ): Promise<InvestmentSnapshot> {
   const supabase = await createServerClient()
 
+  // Get current user's group
+  const groupId = await getCurrentUserGroupId()
+
   const { data, error } = await supabase
     .from('investment_snapshots')
-    .insert({ year, month })
+    .insert({ group_id: groupId, year, month })
     .select()
     .single()
 

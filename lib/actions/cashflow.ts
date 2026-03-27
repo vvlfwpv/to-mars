@@ -7,6 +7,7 @@ import type {
   UpdateCashflowItemInput,
   CashflowItem
 } from '@/types/cashflow'
+import { getCurrentUserGroupId } from '@/lib/queries/group'
 
 /**
  * Cashflow Item 생성
@@ -16,9 +17,12 @@ export async function createCashflowItem(
 ): Promise<CashflowItem> {
   const supabase = await createServerClient()
 
+  // Get current user's group
+  const groupId = await getCurrentUserGroupId()
+
   const { data, error } = await supabase
     .from('cashflow_items')
-    .insert(input)
+    .insert({ ...input, group_id: groupId })
     .select()
     .single()
 

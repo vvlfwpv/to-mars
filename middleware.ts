@@ -34,17 +34,21 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  console.log('[Middleware]', {
-    pathname: request.nextUrl.pathname,
-    hasUser: !!user,
-    origin: request.nextUrl.origin
-  })
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[Middleware]', {
+      pathname: request.nextUrl.pathname,
+      hasUser: !!user,
+      origin: request.nextUrl.origin
+    })
+  }
 
   // Redirect to login if not authenticated and trying to access protected routes
   if (!user && request.nextUrl.pathname === '/') {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
-    console.log('[Middleware] Redirecting to login:', url.href)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Middleware] Redirecting to login:', url.href)
+    }
     return NextResponse.redirect(url)
   }
 
@@ -52,7 +56,9 @@ export async function middleware(request: NextRequest) {
   if (user && request.nextUrl.pathname === '/login') {
     const url = request.nextUrl.clone()
     url.pathname = '/'
-    console.log('[Middleware] Redirecting to home:', url.href)
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Middleware] Redirecting to home:', url.href)
+    }
     return NextResponse.redirect(url)
   }
 

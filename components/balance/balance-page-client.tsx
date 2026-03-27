@@ -44,7 +44,9 @@ export function BalancePageClient({
       const data = await response.json()
       return data.exists
     } catch (error) {
-      console.error('Failed to check snapshot:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to check snapshot:', error)
+      }
       return false
     }
   }
@@ -90,7 +92,9 @@ export function BalancePageClient({
       toast.success('삭제되었습니다.')
       router.refresh()
     } catch (error) {
-      console.error('Failed to delete item:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to delete item:', error)
+      }
       toast.error('삭제에 실패했습니다.')
     }
   }
@@ -110,7 +114,9 @@ export function BalancePageClient({
       await deleteBalanceSnapshot(initialYear, initialMonth)
       toast.success('스냅샷이 삭제되었습니다.')
     } catch (error) {
-      console.error('Failed to delete snapshot:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to delete snapshot:', error)
+      }
       toast.error('스냅샷 삭제에 실패했습니다.')
     }
   }

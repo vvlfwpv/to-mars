@@ -110,7 +110,9 @@ export function InvestmentFormDialog({
       router.refresh()
       onOpenChange(false)
     } catch (error) {
-      console.error('Failed to save investment item:', error)
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to save investment item:', error)
+      }
       toast.error('저장에 실패했습니다.')
     }
   }
