@@ -55,36 +55,50 @@ export function CashflowPageClient({ items, owners }: CashflowPageClientProps) {
   }
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold">Cashflow</h2>
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-8 space-y-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                Cashflow
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+                현금 흐름을 관리하세요
+              </p>
+            </div>
 
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setOwnerManageDialogOpen(true)}>
-            <Users className="h-4 w-4 mr-2" />
-            소유자 관리
-          </Button>
-          <Button onClick={handleAddNew}>
-            <Plus className="h-4 w-4 mr-2" />
-            항목 추가
-          </Button>
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={handleAddNew} size="sm">
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">항목 추가</span>
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setOwnerManageDialogOpen(true)}>
+                <Users className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">소유자 관리</span>
+              </Button>
+            </div>
+          </div>
         </div>
+
+        {/* Table */}
+        <CashflowTable items={items} owners={owners} onEdit={handleEdit} onDelete={handleDelete} />
+
+        <CashflowFormDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          editItem={editItem}
+          owners={owners}
+        />
+
+        <OwnerManageDialog
+          open={ownerManageDialogOpen}
+          onOpenChange={handleOwnerManageDialogChange}
+          owners={owners}
+        />
       </div>
-
-      <CashflowTable items={items} owners={owners} onEdit={handleEdit} onDelete={handleDelete} />
-
-      <CashflowFormDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        editItem={editItem}
-        owners={owners}
-      />
-
-      <OwnerManageDialog
-        open={ownerManageDialogOpen}
-        onOpenChange={handleOwnerManageDialogChange}
-        owners={owners}
-      />
     </div>
   )
 }

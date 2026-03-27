@@ -3,6 +3,8 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import {
   Select,
   SelectContent,
@@ -30,6 +32,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts'
+import { TrendingUp, TrendingDown, Calendar, CalendarDays } from 'lucide-react'
 import type { BalanceSnapshotWithItems } from '@/types/balance'
 import type { InvestmentSnapshotWithItems } from '@/types/investment'
 
@@ -48,6 +51,9 @@ export function DashboardClient({
   investmentSnapshots,
 }: DashboardClientProps) {
   const router = useRouter()
+
+  // 뷰 모드: 'monthly' | 'yearly'
+  const [viewMode, setViewMode] = useState<'monthly' | 'yearly'>('monthly')
 
   // 모든 연월 목록 추출
   const allYearMonths = useMemo(() => {
@@ -106,7 +112,26 @@ export function DashboardClient({
 
   // 재무상태표 계산 (전월대비 포함)
   const balanceData = useMemo(() => {
-    const data = filteredBalanceSnapshots.map((snapshot) => {
+    let snapshots = filteredBalanceSnapshots
+
+    // 연도별 뷰인 경우 각 연도의 마지막 월만 선택
+    if (viewMode === 'yearly') {
+      const yearMap = new Map<number, BalanceSnapshotWithItems>()
+
+      snapshots.forEach((snapshot) => {
+        const existing = yearMap.get(snapshot.year)
+        if (!existing || snapshot.month > existing.month) {
+          yearMap.set(snapshot.year, snapshot)
+        }
+      })
+
+      snapshots = Array.from(yearMap.values()).sort((a, b) => {
+        if (a.year !== b.year) return b.year - a.year
+        return b.month - a.month
+      })
+    }
+
+    const data = snapshots.map((snapshot) => {
       const totalAssets = snapshot.balance_items
         .filter((item) => Number(item.amount) > 0)
         .reduce((sum, item) => sum + Number(item.amount), 0)
@@ -147,11 +172,30 @@ export function DashboardClient({
         monthOverMonthRate: rate,
       }
     })
-  }, [filteredBalanceSnapshots])
+  }, [filteredBalanceSnapshots, viewMode])
 
   // 투자 계산
   const investmentData = useMemo(() => {
-    return filteredInvestmentSnapshots.map((snapshot) => {
+    let snapshots = filteredInvestmentSnapshots
+
+    // 연도별 뷰인 경우 각 연도의 마지막 월만 선택
+    if (viewMode === 'yearly') {
+      const yearMap = new Map<number, InvestmentSnapshotWithItems>()
+
+      snapshots.forEach((snapshot) => {
+        const existing = yearMap.get(snapshot.year)
+        if (!existing || snapshot.month > existing.month) {
+          yearMap.set(snapshot.year, snapshot)
+        }
+      })
+
+      snapshots = Array.from(yearMap.values()).sort((a, b) => {
+        if (a.year !== b.year) return b.year - a.year
+        return b.month - a.month
+      })
+    }
+
+    return snapshots.map((snapshot) => {
       const totalPrincipal = snapshot.investment_items.reduce(
         (sum, item) => sum + Number(item.principal),
         0
@@ -174,7 +218,7 @@ export function DashboardClient({
         profitRate,
       }
     })
-  }, [filteredInvestmentSnapshots])
+  }, [filteredInvestmentSnapshots, viewMode])
 
   const checkBalanceSnapshotExists = async (
     year: number,
@@ -233,241 +277,388 @@ export function DashboardClient({
   }
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold">Dashboard</h2>
-
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">시작:</span>
-            <Select value={startDate} onValueChange={setStartDate}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {allYearMonths.map((ym) => (
-                  <SelectItem key={`${ym.year}-${ym.month}`} value={`${ym.year}-${ym.month}`}>
-                    {ym.year}년 {ym.month}월
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <span className="text-sm text-muted-foreground">~</span>
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">끝:</span>
-            <Select value={endDate} onValueChange={setEndDate}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {allYearMonths.map((ym) => (
-                  <SelectItem key={`${ym.year}-${ym.month}`} value={`${ym.year}-${ym.month}`}>
-                    {ym.year}년 {ym.month}월
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              Dashboard
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+              재무 현황을 한눈에 확인하세요
+            </p>
           </div>
         </div>
+
+        {/* Tabs */}
+        <Tabs defaultValue="balance" className="space-y-6">
+          <div className="flex items-center justify-between gap-2">
+            <TabsList className="inline-flex h-8 w-fit items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground sm:h-9">
+              <TabsTrigger
+                value="balance"
+                className="rounded-md px-2 py-1 text-xs font-medium transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm sm:px-3 sm:py-1.5 sm:text-sm"
+              >
+                자산현황
+              </TabsTrigger>
+              <TabsTrigger
+                value="investment"
+                className="rounded-md px-2 py-1 text-xs font-medium transition-all data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm sm:px-3 sm:py-1.5 sm:text-sm"
+              >
+                투자현황
+              </TabsTrigger>
+            </TabsList>
+
+            <div className="flex items-center gap-2">
+              {/* Date Range Selector */}
+              <div className="flex items-center gap-1 rounded-lg border bg-card p-2 shadow-sm">
+                <Calendar className="hidden h-4 w-4 text-muted-foreground sm:block" />
+                <Select value={startDate} onValueChange={setStartDate}>
+                  <SelectTrigger className="h-7 w-[100px] border-0 text-[11px] shadow-none focus:ring-0 sm:h-8 sm:w-[135px] sm:text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allYearMonths.map((ym) => (
+                      <SelectItem key={`${ym.year}-${ym.month}`} value={`${ym.year}-${ym.month}`}>
+                        {ym.year}년 {ym.month}월
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <span className="text-[10px] text-muted-foreground sm:text-xs">~</span>
+                <Select value={endDate} onValueChange={setEndDate}>
+                  <SelectTrigger className="h-7 w-[100px] border-0 text-[11px] shadow-none focus:ring-0 sm:h-8 sm:w-[135px] sm:text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {allYearMonths.map((ym) => (
+                      <SelectItem key={`${ym.year}-${ym.month}`} value={`${ym.year}-${ym.month}`}>
+                        {ym.year}년 {ym.month}월
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* View Mode Toggle */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setViewMode(viewMode === 'monthly' ? 'yearly' : 'monthly')}
+                className="h-8 gap-1.5 px-2.5 text-xs"
+                title={viewMode === 'monthly' ? '월별 보기' : '연도별 보기'}
+              >
+                {viewMode === 'monthly' ? (
+                  <>
+                    <CalendarDays className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">월별</span>
+                  </>
+                ) : (
+                  <>
+                    <Calendar className="h-3.5 w-3.5" />
+                    <span className="hidden sm:inline">연도별</span>
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {/* Balance Tab */}
+          <TabsContent value="balance" className="space-y-6">
+            {/* Table */}
+            <Card className="border-border/40 shadow-sm">
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-border/40 hover:bg-transparent">
+                        <TableHead className="h-9 text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                          년월
+                        </TableHead>
+                        <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                          총 자산
+                        </TableHead>
+                        <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                          총 부채
+                        </TableHead>
+                        <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                          순자산
+                        </TableHead>
+                        <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                          {viewMode === 'monthly' ? '전월대비' : '전년대비'}
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {balanceData.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={5}
+                            className="h-24 text-center text-sm text-muted-foreground"
+                          >
+                            데이터가 없습니다.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        balanceData.map((data) => (
+                          <TableRow
+                            key={`${data.year}-${data.month}`}
+                            className="cursor-pointer border-border/40 transition-colors hover:bg-muted/50"
+                            onClick={() => handleBalanceRowClick(data.year, data.month)}
+                          >
+                            <TableCell className="text-xs font-medium sm:text-sm">
+                              {data.year}년 {data.month}월
+                            </TableCell>
+                            <TableCell className="text-right text-xs tabular-nums sm:text-sm">
+                              {data.totalAssets.toLocaleString()}
+                              <span className="ml-0.5 text-[10px] text-muted-foreground sm:text-xs">원</span>
+                            </TableCell>
+                            <TableCell className="text-right text-xs tabular-nums sm:text-sm">
+                              {data.totalLiabilities.toLocaleString()}
+                              <span className="ml-0.5 text-[10px] text-muted-foreground sm:text-xs">원</span>
+                            </TableCell>
+                            <TableCell className="text-right text-xs font-semibold tabular-nums sm:text-sm">
+                              {data.netAssets.toLocaleString()}
+                              <span className="ml-0.5 text-[10px] text-muted-foreground sm:text-xs">원</span>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {data.monthOverMonthChange === 0 ? (
+                                <span className="text-[10px] text-muted-foreground sm:text-xs">-</span>
+                              ) : (
+                                <div className="inline-flex flex-col items-end gap-0.5">
+                                  <div
+                                    className={`flex items-center gap-1 text-xs font-medium tabular-nums sm:text-sm ${
+                                      data.monthOverMonthChange >= 0
+                                        ? 'text-emerald-600 dark:text-emerald-500'
+                                        : 'text-rose-600 dark:text-rose-500'
+                                    }`}
+                                  >
+                                    {data.monthOverMonthChange >= 0 ? (
+                                      <TrendingUp className="h-3 w-3" />
+                                    ) : (
+                                      <TrendingDown className="h-3 w-3" />
+                                    )}
+                                    {data.monthOverMonthChange >= 0 ? '+' : ''}
+                                    {data.monthOverMonthChange.toLocaleString()}
+                                  </div>
+                                  <div
+                                    className={`text-[10px] tabular-nums sm:text-xs ${
+                                      data.monthOverMonthChange >= 0
+                                        ? 'text-emerald-600/80 dark:text-emerald-500/80'
+                                        : 'text-rose-600/80 dark:text-rose-500/80'
+                                    }`}
+                                  >
+                                    {data.monthOverMonthChange >= 0 ? '+' : ''}
+                                    {data.monthOverMonthRate.toFixed(2)}%
+                                  </div>
+                                </div>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Chart */}
+            {balanceData.length > 0 && (
+              <Card className="border-border/40 shadow-sm">
+                <CardHeader className="space-y-1 pb-4">
+                  <CardTitle className="text-base font-semibold">순자산 추이</CardTitle>
+                  <CardDescription className="text-xs">
+                    월별 순자산 변화를 확인하세요
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[280px] w-full sm:h-[320px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={balanceData.slice().reverse()}>
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke="hsl(var(--border))"
+                          opacity={0.3}
+                        />
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                          tickLine={{ stroke: 'hsl(var(--border))' }}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                          tickLine={{ stroke: 'hsl(var(--border))' }}
+                          tickFormatter={(value) => `${(value / 1000000).toFixed(0)}M`}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                            fontSize: '12px',
+                          }}
+                          formatter={(value) =>
+                            typeof value === 'number' ? value.toLocaleString() + '원' : ''
+                          }
+                        />
+                        <Legend wrapperStyle={{ fontSize: '12px' }} />
+                        <Line
+                          type="monotone"
+                          dataKey="netAssets"
+                          name="순자산"
+                          stroke="hsl(var(--primary))"
+                          strokeWidth={2}
+                          dot={{ r: 3, fill: 'hsl(var(--primary))' }}
+                          activeDot={{ r: 5 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+
+          {/* Investment Tab */}
+          <TabsContent value="investment" className="space-y-6">
+            {/* Table */}
+            <Card className="border-border/40 shadow-sm">
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-border/40 hover:bg-transparent">
+                        <TableHead className="h-9 text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                          년월
+                        </TableHead>
+                        <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                          총 원금
+                        </TableHead>
+                        <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                          총 평가액
+                        </TableHead>
+                        <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                          평가손익
+                        </TableHead>
+                        <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                          수익률
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {investmentData.length === 0 ? (
+                        <TableRow>
+                          <TableCell
+                            colSpan={5}
+                            className="h-24 text-center text-sm text-muted-foreground"
+                          >
+                            데이터가 없습니다.
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        investmentData.map((data) => (
+                          <TableRow
+                            key={`${data.year}-${data.month}`}
+                            className="cursor-pointer border-border/40 transition-colors hover:bg-muted/50"
+                            onClick={() => handleInvestmentRowClick(data.year, data.month)}
+                          >
+                            <TableCell className="text-xs font-medium sm:text-sm">
+                              {data.year}년 {data.month}월
+                            </TableCell>
+                            <TableCell className="text-right text-xs tabular-nums sm:text-sm">
+                              {data.totalPrincipal.toLocaleString()}
+                              <span className="ml-0.5 text-[10px] text-muted-foreground sm:text-xs">원</span>
+                            </TableCell>
+                            <TableCell className="text-right text-xs tabular-nums sm:text-sm">
+                              {data.totalValue.toLocaleString()}
+                              <span className="ml-0.5 text-[10px] text-muted-foreground sm:text-xs">원</span>
+                            </TableCell>
+                            <TableCell
+                              className={`text-right text-xs font-medium tabular-nums sm:text-sm ${
+                                data.profitLoss >= 0
+                                  ? 'text-emerald-600 dark:text-emerald-500'
+                                  : 'text-rose-600 dark:text-rose-500'
+                              }`}
+                            >
+                              {data.profitLoss >= 0 ? '+' : ''}
+                              {data.profitLoss.toLocaleString()}
+                              <span className="ml-0.5 text-[10px] sm:text-xs">원</span>
+                            </TableCell>
+                            <TableCell
+                              className={`text-right text-xs font-semibold tabular-nums sm:text-sm ${
+                                data.profitRate >= 0
+                                  ? 'text-emerald-600 dark:text-emerald-500'
+                                  : 'text-rose-600 dark:text-rose-500'
+                              }`}
+                            >
+                              {data.profitRate >= 0 ? '+' : ''}
+                              {data.profitRate.toFixed(2)}%
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Chart */}
+            {investmentData.length > 0 && (
+              <Card className="border-border/40 shadow-sm">
+                <CardHeader className="space-y-1 pb-4">
+                  <CardTitle className="text-base font-semibold">수익률 추이</CardTitle>
+                  <CardDescription className="text-xs">
+                    월별 투자 수익률을 확인하세요
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[280px] w-full sm:h-[320px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={investmentData.slice().reverse()}>
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke="hsl(var(--border))"
+                          opacity={0.3}
+                        />
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                          tickLine={{ stroke: 'hsl(var(--border))' }}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                          tickLine={{ stroke: 'hsl(var(--border))' }}
+                          tickFormatter={(value) => `${value.toFixed(0)}%`}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                            fontSize: '12px',
+                          }}
+                          formatter={(value) =>
+                            typeof value === 'number' ? `${value.toFixed(2)}%` : ''
+                          }
+                        />
+                        <Legend wrapperStyle={{ fontSize: '12px' }} />
+                        <Bar
+                          dataKey="profitRate"
+                          name="수익률"
+                          fill="hsl(var(--primary))"
+                          radius={[4, 4, 0, 0]}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
-
-      <Tabs defaultValue="balance" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="balance">재무상태표</TabsTrigger>
-          <TabsTrigger value="investment">투자</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="balance" className="space-y-4">
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>년월</TableHead>
-                  <TableHead className="text-right">총 자산</TableHead>
-                  <TableHead className="text-right">총 부채</TableHead>
-                  <TableHead className="text-right">순자산</TableHead>
-                  <TableHead className="text-right">전월대비</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {balanceData.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
-                      데이터가 없습니다.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  balanceData.map((data) => (
-                    <TableRow
-                      key={`${data.year}-${data.month}`}
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => handleBalanceRowClick(data.year, data.month)}
-                    >
-                      <TableCell>
-                        {data.year}년 {data.month}월
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {data.totalAssets.toLocaleString()}원
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {data.totalLiabilities.toLocaleString()}원
-                      </TableCell>
-                      <TableCell className="text-right font-mono font-semibold">
-                        {data.netAssets.toLocaleString()}원
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {data.monthOverMonthChange === 0 ? (
-                          <span className="text-muted-foreground text-sm">-</span>
-                        ) : (
-                          <div>
-                            <div
-                              className={`font-mono text-sm ${
-                                data.monthOverMonthChange >= 0
-                                  ? 'text-green-600'
-                                  : 'text-red-600'
-                              }`}
-                            >
-                              {data.monthOverMonthChange >= 0 ? '+' : ''}
-                              {data.monthOverMonthChange.toLocaleString()}원
-                            </div>
-                            <div
-                              className={`text-xs ${
-                                data.monthOverMonthChange >= 0
-                                  ? 'text-green-600'
-                                  : 'text-red-600'
-                              }`}
-                            >
-                              ({data.monthOverMonthChange >= 0 ? '+' : ''}
-                              {data.monthOverMonthRate.toFixed(2)}%)
-                            </div>
-                          </div>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          {balanceData.length > 0 && (
-            <div className="rounded-md border p-6">
-              <h3 className="text-lg font-semibold mb-4">순자산 추이</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={balanceData.slice().reverse()}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                  <YAxis
-                    tick={{ fontSize: 12 }}
-                    tickFormatter={(value) => `${(value / 1000000).toFixed(0)}M`}
-                  />
-                  <Tooltip
-                    formatter={(value) =>
-                      typeof value === 'number' ? value.toLocaleString() + '원' : ''
-                    }
-                    labelStyle={{ color: '#000' }}
-                  />
-                  <Legend />
-                  <Line
-                    type="monotone"
-                    dataKey="netAssets"
-                    name="순자산"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
-                    dot={{ r: 4 }}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </TabsContent>
-
-        <TabsContent value="investment" className="space-y-4">
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>년월</TableHead>
-                  <TableHead className="text-right">총 원금</TableHead>
-                  <TableHead className="text-right">총 평가액</TableHead>
-                  <TableHead className="text-right">평가손익</TableHead>
-                  <TableHead className="text-right">수익률</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {investmentData.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
-                      데이터가 없습니다.
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  investmentData.map((data) => (
-                    <TableRow
-                      key={`${data.year}-${data.month}`}
-                      className="cursor-pointer hover:bg-muted/50"
-                      onClick={() => handleInvestmentRowClick(data.year, data.month)}
-                    >
-                      <TableCell>
-                        {data.year}년 {data.month}월
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {data.totalPrincipal.toLocaleString()}원
-                      </TableCell>
-                      <TableCell className="text-right font-mono">
-                        {data.totalValue.toLocaleString()}원
-                      </TableCell>
-                      <TableCell
-                        className={`text-right font-mono ${
-                          data.profitLoss >= 0 ? 'text-green-600' : 'text-red-600'
-                        }`}
-                      >
-                        {data.profitLoss >= 0 ? '+' : ''}
-                        {data.profitLoss.toLocaleString()}원
-                      </TableCell>
-                      <TableCell
-                        className={`text-right font-mono ${
-                          data.profitRate >= 0 ? 'text-green-600' : 'text-red-600'
-                        }`}
-                      >
-                        {data.profitRate >= 0 ? '+' : ''}
-                        {data.profitRate.toFixed(2)}%
-                      </TableCell>
-                    </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
-
-          {investmentData.length > 0 && (
-            <div className="rounded-md border p-6">
-              <h3 className="text-lg font-semibold mb-4">수익률 추이</h3>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={investmentData.slice().reverse()}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                  <YAxis
-                    tick={{ fontSize: 12 }}
-                    tickFormatter={(value) => `${value.toFixed(0)}%`}
-                  />
-                  <Tooltip
-                    formatter={(value) =>
-                      typeof value === 'number' ? `${value.toFixed(2)}%` : ''
-                    }
-                    labelStyle={{ color: '#000' }}
-                  />
-                  <Legend />
-                  <Bar dataKey="profitRate" name="수익률" fill="#10b981" />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
     </div>
   )
 }

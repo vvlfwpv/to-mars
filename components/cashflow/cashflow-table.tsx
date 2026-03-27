@@ -2,6 +2,7 @@
 
 import { CashflowItem } from '@/types/cashflow'
 import { Owner } from '@/types/owner'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Pencil, Trash2 } from 'lucide-react'
 
@@ -55,185 +56,197 @@ export function CashflowTable({ items, owners, onEdit, onDelete }: CashflowTable
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-3 gap-4">
+      {/* Owner Cards */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
         {owners.map((owner) => {
           const data = ownerDataMap.get(owner.name)
           if (!data) return null
 
           return (
-            <div key={owner.id} className="border rounded-lg p-4 space-y-4">
-              <h3 className="text-lg font-bold text-center">{owner.name}</h3>
+            <Card key={owner.id} className="border-border/40 shadow-sm">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-center text-base sm:text-lg">{owner.name}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* 수입 */}
+                <div className="space-y-2">
+                  <div className="text-xs font-semibold text-emerald-600 dark:text-emerald-500 sm:text-sm">수입</div>
+                  {data.items
+                    .filter((item) => item.category === '수입')
+                    .map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between gap-2 text-xs sm:text-sm"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate">{item.item_name}</div>
+                          {item.description && (
+                            <div className="truncate text-[10px] text-muted-foreground sm:text-xs">
+                              {item.description}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex shrink-0 items-center gap-1">
+                          <span className="text-xs tabular-nums sm:text-sm">
+                            {Number(item.amount).toLocaleString()}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onEdit(item)}
+                            className="h-7 w-7 p-0"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onDelete(item.id)}
+                            className="h-7 w-7 p-0"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  <div className="border-t pt-2 text-right text-xs font-semibold tabular-nums sm:text-sm">
+                    {data.income.toLocaleString()}원
+                  </div>
+                </div>
 
-              {/* 수입 */}
-              <div className="space-y-2">
-                <div className="text-sm font-semibold text-green-600">수입</div>
-                {data.items
-                  .filter((item) => item.category === '수입')
-                  .map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between text-sm"
-                    >
-                      <div className="flex-1">
-                        <div>{item.item_name}</div>
-                        {item.description && (
-                          <div className="text-xs text-muted-foreground">
-                            {item.description}
-                          </div>
-                        )}
+                {/* 고정비 */}
+                <div className="space-y-2">
+                  <div className="text-xs font-semibold text-rose-600 dark:text-rose-500 sm:text-sm">고정비</div>
+                  {data.items
+                    .filter((item) => item.category === '고정비')
+                    .map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between gap-2 text-xs sm:text-sm"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate">{item.item_name}</div>
+                          {item.description && (
+                            <div className="truncate text-[10px] text-muted-foreground sm:text-xs">
+                              {item.description}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex shrink-0 items-center gap-1">
+                          <span className="text-xs tabular-nums sm:text-sm">
+                            {Number(item.amount).toLocaleString()}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onEdit(item)}
+                            className="h-7 w-7 p-0"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onDelete(item.id)}
+                            className="h-7 w-7 p-0"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono">
-                          {Number(item.amount).toLocaleString()}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onEdit(item)}
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onDelete(item.id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                <div className="text-right font-semibold text-sm border-t pt-2">
-                  {data.income.toLocaleString()}원
+                    ))}
+                  <div className="border-t pt-2 text-right text-xs font-semibold tabular-nums sm:text-sm">
+                    {data.fixedExpense.toLocaleString()}원
+                  </div>
                 </div>
-              </div>
 
-              {/* 고정비 */}
-              <div className="space-y-2">
-                <div className="text-sm font-semibold text-red-600">고정비</div>
-                {data.items
-                  .filter((item) => item.category === '고정비')
-                  .map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between text-sm"
-                    >
-                      <div className="flex-1">
-                        <div>{item.item_name}</div>
-                        {item.description && (
-                          <div className="text-xs text-muted-foreground">
-                            {item.description}
-                          </div>
-                        )}
+                {/* 비유동투자 */}
+                <div className="space-y-2">
+                  <div className="text-xs font-semibold text-blue-600 dark:text-blue-500 sm:text-sm">
+                    비유동투자
+                  </div>
+                  {data.items
+                    .filter((item) => item.category === '비유동투자')
+                    .map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between gap-2 text-xs sm:text-sm"
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate">{item.item_name}</div>
+                          {item.description && (
+                            <div className="truncate text-[10px] text-muted-foreground sm:text-xs">
+                              {item.description}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex shrink-0 items-center gap-1">
+                          <span className="text-xs tabular-nums sm:text-sm">
+                            {Number(item.amount).toLocaleString()}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onEdit(item)}
+                            className="h-7 w-7 p-0"
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onDelete(item.id)}
+                            className="h-7 w-7 p-0"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono">
-                          {Number(item.amount).toLocaleString()}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onEdit(item)}
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onDelete(item.id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                <div className="text-right font-semibold text-sm border-t pt-2">
-                  {data.fixedExpense.toLocaleString()}원
+                    ))}
+                  <div className="border-t pt-2 text-right text-xs font-semibold tabular-nums sm:text-sm">
+                    {data.investment.toLocaleString()}원
+                  </div>
                 </div>
-              </div>
-
-              {/* 비유동투자 */}
-              <div className="space-y-2">
-                <div className="text-sm font-semibold text-blue-600">
-                  비유동투자
-                </div>
-                {data.items
-                  .filter((item) => item.category === '비유동투자')
-                  .map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between text-sm"
-                    >
-                      <div className="flex-1">
-                        <div>{item.item_name}</div>
-                        {item.description && (
-                          <div className="text-xs text-muted-foreground">
-                            {item.description}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="font-mono">
-                          {Number(item.amount).toLocaleString()}
-                        </span>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onEdit(item)}
-                        >
-                          <Pencil className="h-3 w-3" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onDelete(item.id)}
-                        >
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                <div className="text-right font-semibold text-sm border-t pt-2">
-                  {data.investment.toLocaleString()}원
-                </div>
-              </div>
-            </div>
+              </CardContent>
+            </Card>
           )
         })}
       </div>
 
-      {/* 전체 합계 */}
-      <div className="rounded-md border bg-muted/50 p-4 space-y-2">
-        <div className="flex justify-between text-sm">
-          <span>총 수입:</span>
-          <span className="font-mono font-semibold text-green-600">
-            {totalIncome.toLocaleString()}원
-          </span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span>총 고정비:</span>
-          <span className="font-mono font-semibold text-red-600">
-            {totalFixedExpense.toLocaleString()}원
-          </span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span>총 비유동투자:</span>
-          <span className="font-mono font-semibold text-blue-600">
-            {totalInvestment.toLocaleString()}원
-          </span>
-        </div>
-        <div className="flex justify-between border-t pt-2">
-          <span className="font-semibold">저축액:</span>
-          <div className="text-right">
-            <div className="font-mono font-bold">
-              {savings.toLocaleString()}원
-            </div>
-            <div className="text-sm text-muted-foreground">
-              저축률: {savingsRate.toFixed(1)}%
+      {/* Summary Card */}
+      <Card className="border-border/40 bg-muted/30 shadow-sm">
+        <CardContent className="space-y-2 p-4 sm:p-6">
+          <div className="flex justify-between text-xs sm:text-sm">
+            <span className="text-muted-foreground">총 수입:</span>
+            <span className="font-semibold tabular-nums text-emerald-600 dark:text-emerald-500">
+              {totalIncome.toLocaleString()}원
+            </span>
+          </div>
+          <div className="flex justify-between text-xs sm:text-sm">
+            <span className="text-muted-foreground">총 고정비:</span>
+            <span className="font-semibold tabular-nums text-rose-600 dark:text-rose-500">
+              {totalFixedExpense.toLocaleString()}원
+            </span>
+          </div>
+          <div className="flex justify-between text-xs sm:text-sm">
+            <span className="text-muted-foreground">총 비유동투자:</span>
+            <span className="font-semibold tabular-nums text-blue-600 dark:text-blue-500">
+              {totalInvestment.toLocaleString()}원
+            </span>
+          </div>
+          <div className="flex justify-between border-t pt-2">
+            <span className="text-sm font-semibold sm:text-base">저축액:</span>
+            <div className="text-right">
+              <div className="text-sm font-bold tabular-nums sm:text-base">
+                {savings.toLocaleString()}원
+              </div>
+              <div className="text-xs text-muted-foreground sm:text-sm">
+                저축률: {savingsRate.toFixed(1)}%
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

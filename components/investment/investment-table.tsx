@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Pencil, Trash2 } from 'lucide-react'
 
@@ -27,99 +28,125 @@ export function InvestmentTable({ items, onEdit, onDelete }: InvestmentTableProp
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>대분류</TableHead>
-              <TableHead>종목코드</TableHead>
-              <TableHead>종목명</TableHead>
-              <TableHead className="text-right">원금</TableHead>
-              <TableHead className="text-right">월말평가액</TableHead>
-              <TableHead className="text-right">수량</TableHead>
-              <TableHead className="text-right">액션</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {items.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={7} className="text-center text-muted-foreground">
-                  등록된 항목이 없습니다.
-                </TableCell>
-              </TableRow>
-            ) : (
-              items.map((item) => {
-                const itemProfit = Number(item.month_end_value) - Number(item.principal)
-                const itemProfitRate = Number(item.principal) > 0
-                  ? (itemProfit / Number(item.principal)) * 100
-                  : 0
-
-                return (
-                  <TableRow key={item.id}>
-                    <TableCell>{item.category}</TableCell>
-                    <TableCell>{item.code || '-'}</TableCell>
-                    <TableCell>{item.name}</TableCell>
-                    <TableCell className="text-right font-mono">
-                      {Number(item.principal).toLocaleString()}
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      <div>
-                        {Number(item.month_end_value).toLocaleString()}
-                      </div>
-                      <div className={`text-xs ${itemProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        ({itemProfit >= 0 ? '+' : ''}{itemProfitRate.toFixed(2)}%)
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      {item.quantity ? Number(item.quantity).toLocaleString() : '-'}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onEdit(item)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => onDelete(item.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+      {/* Items Table */}
+      <Card className="border-border/40 shadow-sm">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
+            <Table>
+              <TableHeader>
+                <TableRow className="border-border/40 hover:bg-transparent">
+                  <TableHead className="h-9 text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                    대분류
+                  </TableHead>
+                  <TableHead className="h-9 text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                    종목코드
+                  </TableHead>
+                  <TableHead className="h-9 text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                    종목명
+                  </TableHead>
+                  <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                    원금
+                  </TableHead>
+                  <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                    월말평가액
+                  </TableHead>
+                  <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                    수량
+                  </TableHead>
+                  <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                    액션
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={7} className="h-24 text-center text-sm text-muted-foreground">
+                      등록된 항목이 없습니다.
                     </TableCell>
                   </TableRow>
-                )
-              })
-            )}
-          </TableBody>
-        </Table>
-      </div>
+                ) : (
+                  items.map((item) => {
+                    const itemProfit = Number(item.month_end_value) - Number(item.principal)
+                    const itemProfitRate = Number(item.principal) > 0
+                      ? (itemProfit / Number(item.principal)) * 100
+                      : 0
 
-      <div className="rounded-md border bg-muted/50 p-4 space-y-2">
-        <div className="flex justify-between text-sm">
-          <span>총 원금:</span>
-          <span className="font-mono font-semibold">{totalPrincipal.toLocaleString()}원</span>
-        </div>
-        <div className="flex justify-between text-sm">
-          <span>총 평가액:</span>
-          <span className="font-mono font-semibold">{totalValue.toLocaleString()}원</span>
-        </div>
-        <div className="flex justify-between border-t pt-2">
-          <span className="font-semibold">평가손익:</span>
-          <div className="text-right">
-            <div className={`font-mono font-bold ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {profitLoss >= 0 ? '+' : ''}{profitLoss.toLocaleString()}원
-            </div>
-            <div className={`text-sm ${profitLoss >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              ({profitLoss >= 0 ? '+' : ''}{profitRate.toFixed(2)}%)
+                    return (
+                      <TableRow key={item.id} className="border-border/40">
+                        <TableCell className="text-xs sm:text-sm">{item.category}</TableCell>
+                        <TableCell className="text-xs sm:text-sm">{item.code || '-'}</TableCell>
+                        <TableCell className="text-xs sm:text-sm">{item.name}</TableCell>
+                        <TableCell className="text-right text-xs tabular-nums sm:text-sm">
+                          {Number(item.principal).toLocaleString()}
+                          <span className="ml-0.5 text-[10px] text-muted-foreground sm:text-xs">원</span>
+                        </TableCell>
+                        <TableCell className="text-right text-xs tabular-nums sm:text-sm">
+                          <div>
+                            {Number(item.month_end_value).toLocaleString()}
+                            <span className="ml-0.5 text-[10px] text-muted-foreground sm:text-xs">원</span>
+                          </div>
+                          <div className={`text-[10px] sm:text-xs ${itemProfit >= 0 ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
+                            ({itemProfit >= 0 ? '+' : ''}{itemProfitRate.toFixed(2)}%)
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-right text-xs tabular-nums sm:text-sm">
+                          {item.quantity ? Number(item.quantity).toLocaleString() : '-'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => onEdit(item)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => onDelete(item.id)}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Summary Card */}
+      <Card className="border-border/40 bg-muted/30 shadow-sm">
+        <CardContent className="space-y-2 p-4 sm:p-6">
+          <div className="flex justify-between text-xs sm:text-sm">
+            <span className="text-muted-foreground">총 원금:</span>
+            <span className="font-semibold tabular-nums">{totalPrincipal.toLocaleString()}원</span>
+          </div>
+          <div className="flex justify-between text-xs sm:text-sm">
+            <span className="text-muted-foreground">총 평가액:</span>
+            <span className="font-semibold tabular-nums">{totalValue.toLocaleString()}원</span>
+          </div>
+          <div className="flex justify-between border-t pt-2">
+            <span className="text-sm font-semibold sm:text-base">평가손익:</span>
+            <div className="text-right">
+              <div className={`text-sm font-bold tabular-nums sm:text-base ${profitLoss >= 0 ? 'text-emerald-600 dark:text-emerald-500' : 'text-rose-600 dark:text-rose-500'}`}>
+                {profitLoss >= 0 ? '+' : ''}{profitLoss.toLocaleString()}원
+              </div>
+              <div className={`text-xs tabular-nums sm:text-sm ${profitLoss >= 0 ? 'text-emerald-600/80 dark:text-emerald-500/80' : 'text-rose-600/80 dark:text-rose-500/80'}`}>
+                ({profitLoss >= 0 ? '+' : ''}{profitRate.toFixed(2)}%)
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

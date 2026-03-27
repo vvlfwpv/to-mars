@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import type { BalanceItem, BalanceSnapshotWithItems } from '@/types/balance'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent } from '@/components/ui/card'
 import {
   Select,
   SelectContent,
@@ -17,7 +18,7 @@ import { BalanceFormDialog } from './balance-form-dialog'
 import { BalanceCopyDialog } from './balance-copy-dialog'
 import { deleteBalanceItem } from '@/lib/actions/balance'
 import { deleteBalanceSnapshot } from '@/lib/actions/snapshot'
-import { Plus, Copy, Trash2 } from 'lucide-react'
+import { Plus, Copy, Trash2, Calendar } from 'lucide-react'
 
 type BalancePageClientProps = {
   snapshot: BalanceSnapshotWithItems
@@ -120,85 +121,94 @@ export function BalancePageClient({
   }
 
   return (
-    <div className="p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="text-3xl font-bold">Balance Sheet</h2>
-
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">년도:</span>
-            <Select value={initialYear.toString()} onValueChange={handleYearChange}>
-              <SelectTrigger className="w-32">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.from({ length: 5 }, (_, i) => currentYear - i).map((y) => (
-                  <SelectItem key={y} value={y.toString()}>
-                    {y}년
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/20">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-8 space-y-4">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+              Balance Sheet
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+              재무상태표를 관리하세요
+            </p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">월:</span>
-            <Select value={initialMonth.toString()} onValueChange={handleMonthChange}>
-              <SelectTrigger className="w-24">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
-                  <SelectItem key={m} value={m.toString()}>
-                    {m}월
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          {/* Action Buttons and Date Selector */}
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={handleAddNew} size="sm">
+                <Plus className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">항목 추가</span>
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setCopyDialogOpen(true)}>
+                <Copy className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">다음 달로 복사</span>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDeleteSnapshot}
+                className="text-rose-600 hover:text-rose-700 dark:text-rose-500 dark:hover:text-rose-400"
+              >
+                <Trash2 className="h-4 w-4 sm:mr-2" />
+                <span className="hidden sm:inline">스냅샷 삭제</span>
+              </Button>
+            </div>
+
+            {/* Date Selector */}
+            <div className="flex shrink-0 flex-wrap items-center gap-1 rounded-lg border bg-card p-2 shadow-sm sm:gap-2 sm:p-3">
+              <Calendar className="hidden h-4 w-4 text-muted-foreground sm:block" />
+              <Select value={initialYear.toString()} onValueChange={handleYearChange}>
+                <SelectTrigger className="h-7 w-[80px] border-0 text-xs shadow-none focus:ring-0 sm:h-8 sm:w-[120px] sm:text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 5 }, (_, i) => currentYear - i).map((y) => (
+                    <SelectItem key={y} value={y.toString()}>
+                      {y}년
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={initialMonth.toString()} onValueChange={handleMonthChange}>
+                <SelectTrigger className="h-7 w-[70px] border-0 text-xs shadow-none focus:ring-0 sm:h-8 sm:w-[100px] sm:text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map((m) => (
+                    <SelectItem key={m} value={m.toString()}>
+                      {m}월
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-
-          <Button variant="outline" size="sm" onClick={() => setCopyDialogOpen(true)}>
-            <Copy className="h-4 w-4 mr-2" />
-            다음 달로 복사
-          </Button>
-
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={handleDeleteSnapshot}
-            className="text-red-600 hover:text-red-700"
-          >
-            <Trash2 className="h-4 w-4 mr-2" />
-            스냅샷 삭제
-          </Button>
         </div>
+
+        {/* Table */}
+        <BalanceTable
+          items={snapshot.balance_items}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+        />
+
+        <BalanceFormDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          snapshotId={snapshot.id}
+          editItem={editItem}
+        />
+
+        <BalanceCopyDialog
+          open={copyDialogOpen}
+          onOpenChange={setCopyDialogOpen}
+          currentYear={initialYear}
+          currentMonth={initialMonth}
+          items={snapshot.balance_items}
+        />
       </div>
-
-      <BalanceTable
-        items={snapshot.balance_items}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-      />
-
-      <Button onClick={handleAddNew}>
-        <Plus className="h-4 w-4 mr-2" />
-        항목 추가
-      </Button>
-
-      <BalanceFormDialog
-        open={dialogOpen}
-        onOpenChange={setDialogOpen}
-        snapshotId={snapshot.id}
-        editItem={editItem}
-      />
-
-      <BalanceCopyDialog
-        open={copyDialogOpen}
-        onOpenChange={setCopyDialogOpen}
-        currentYear={initialYear}
-        currentMonth={initialMonth}
-        items={snapshot.balance_items}
-      />
     </div>
   )
 }
