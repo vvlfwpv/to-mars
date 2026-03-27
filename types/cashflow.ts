@@ -15,11 +15,11 @@ export type CashflowItem = {
 
 export type CreateCashflowItemInput = Omit<
   CashflowItem,
-  'id' | 'created_at'
+  'id' | 'group_id' | 'created_at'
 >
 
 export type UpdateCashflowItemInput = Partial<
-  Omit<CashflowItem, 'id' | 'created_at'>
+  Omit<CashflowItem, 'id' | 'group_id' | 'created_at'>
 >
 
 // Cashflow 계산용 타입
