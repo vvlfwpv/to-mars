@@ -16,6 +16,10 @@ export type GroupMember = {
   created_at: Timestamp
 }
 
+export type GroupMemberWithEmail = GroupMember & {
+  user_email: string
+}
+
 export type GroupWithMembers = Group & {
   members: GroupMember[]
 }

@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
 import { Palette, Sun, Moon, Check, Users, Plus } from 'lucide-react'
-import type { Group } from '@/types/group'
+import type { Group, GroupMemberWithEmail } from '@/types/group'
 import { GroupManageDialog } from './group-manage-dialog'
+import { GroupInviteDialog } from './group-invite-dialog'
+import { GroupMembersList } from './group-members-list'
 
 const themeOptions: { value: ThemeVariant; label: string; description: string }[] = [
   {
@@ -36,11 +38,19 @@ const themeOptions: { value: ThemeVariant; label: string; description: string }[
 type SettingsPageClientProps = {
   userGroups: Group[]
   currentGroupId: string
+  groupMembers: GroupMemberWithEmail[]
+  currentUserId: string
 }
 
-export function SettingsPageClient({ userGroups, currentGroupId }: SettingsPageClientProps) {
+export function SettingsPageClient({
+  userGroups,
+  currentGroupId,
+  groupMembers,
+  currentUserId,
+}: SettingsPageClientProps) {
   const { themeVariant, colorMode, setThemeVariant, setColorMode } = useTheme()
   const [groupDialogOpen, setGroupDialogOpen] = useState(false)
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
 
   const currentGroup = userGroups.find(g => g.id === currentGroupId)
 
@@ -95,6 +105,16 @@ export function SettingsPageClient({ userGroups, currentGroupId }: SettingsPageC
                   </p>
                 </div>
               </div>
+
+              {/* Group Members List */}
+              <GroupMembersList
+                groupId={currentGroupId}
+                groupName={currentGroup?.name || ''}
+                members={groupMembers}
+                currentUserId={currentUserId}
+                isSampleGroup={currentGroup?.is_sample || false}
+                onInviteClick={() => setInviteDialogOpen(true)}
+              />
             </CardContent>
           </Card>
 
@@ -211,6 +231,14 @@ export function SettingsPageClient({ userGroups, currentGroupId }: SettingsPageC
       <GroupManageDialog
         open={groupDialogOpen}
         onOpenChange={setGroupDialogOpen}
+      />
+
+      {/* Group Invite Dialog */}
+      <GroupInviteDialog
+        open={inviteDialogOpen}
+        onOpenChange={setInviteDialogOpen}
+        groupId={currentGroupId}
+        groupName={currentGroup?.name || ''}
       />
     </div>
   )

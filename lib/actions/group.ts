@@ -115,3 +115,93 @@ export async function deleteGroup(groupId: string): Promise<void> {
 
   revalidatePath('/')
 }
+
+/**
+ * 그룹에 사용자 초대 (이메일로)
+ */
+export async function inviteUserToGroup(groupId: string, userEmail: string): Promise<void> {
+  const supabase = await createServerClient()
+
+  // 현재 사용자가 해당 그룹의 멤버인지 확인
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+
+  const { data: membership } = await supabase
+    .from('group_members')
+    .select('id')
+    .eq('group_id', groupId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!membership) {
+    throw new Error('You are not a member of this group')
+  }
+
+  // 초대할 사용자 찾기 (RPC 함수 사용)
+  const { data: invitedUserId, error: userError } = await supabase
+    .rpc('get_user_id_by_email', { user_email: userEmail })
+
+  // RPC 함수가 없는 경우 더 명확한 에러 메시지
+  if (userError) {
+    if (userError.message?.includes('function') || userError.code === '42883') {
+      throw new Error('Database migration required. Please run the user lookup functions migration.')
+    }
+    throw new Error('Failed to lookup user')
+  }
+
+  if (!invitedUserId) {
+    throw new Error('User not found')
+  }
+
+  // 이미 그룹에 속해있는지 확인
+  const { data: existingMember } = await supabase
+    .from('group_members')
+    .select('id')
+    .eq('group_id', groupId)
+    .eq('user_id', invitedUserId)
+    .single()
+
+  if (existingMember) {
+    throw new Error('User is already a member of this group')
+  }
+
+  // 그룹에 추가
+  const { error: insertError } = await supabase
+    .from('group_members')
+    .insert({
+      group_id: groupId,
+      user_id: invitedUserId,
+    })
+
+  if (insertError) throw insertError
+
+  revalidatePath('/')
+}
+
+/**
+ * 그룹에서 사용자 제거
+ */
+export async function removeUserFromGroup(groupId: string, userId: string): Promise<void> {
+  const supabase = await createServerClient()
+
+  // Sample Group에서는 제거 불가
+  const { data: group } = await supabase
+    .from('groups')
+    .select('is_sample')
+    .eq('id', groupId)
+    .single()
+
+  if (group?.is_sample) {
+    throw new Error('Cannot remove users from sample group')
+  }
+
+  const { error } = await supabase
+    .from('group_members')
+    .delete()
+    .eq('group_id', groupId)
+    .eq('user_id', userId)
+
+  if (error) throw error
+
+  revalidatePath('/')
+}

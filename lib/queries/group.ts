@@ -1,6 +1,6 @@
 import { cache } from 'react'
 import { createServerClient } from '@/lib/supabase/client'
-import type { Group, GroupMember } from '@/types/group'
+import type { Group, GroupMember, GroupMemberWithEmail } from '@/types/group'
 import { getSelectedGroupId } from '@/lib/utils/group-cookie'
 
 /**
@@ -76,6 +76,40 @@ export async function getGroupMembers(groupId: string): Promise<GroupMember[]> {
   if (error) throw error
 
   return data as GroupMember[]
+}
+
+/**
+ * 그룹의 모든 멤버 조회 (이메일 포함)
+ */
+export async function getGroupMembersWithEmails(groupId: string): Promise<GroupMemberWithEmail[]> {
+  const supabase = await createServerClient()
+
+  // Try using RPC function if available, otherwise fall back to basic query
+  try {
+    const { data, error } = await supabase
+      .rpc('get_group_members_with_emails', { p_group_id: groupId })
+
+    if (!error && data) {
+      return data as GroupMemberWithEmail[]
+    }
+  } catch (e) {
+    // RPC function not available, use fallback
+  }
+
+  // Fallback: Get members without emails (will show user_id instead)
+  const { data, error } = await supabase
+    .from('group_members')
+    .select('*')
+    .eq('group_id', groupId)
+    .order('created_at', { ascending: true })
+
+  if (error) throw error
+
+  // Map to GroupMemberWithEmail format with user_id as email temporarily
+  return (data as GroupMember[]).map(member => ({
+    ...member,
+    user_email: member.user_id, // Temporary: show user_id until migration is run
+  }))
 }
 
 /**

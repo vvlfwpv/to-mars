@@ -117,7 +117,24 @@ export async function createInvestmentSnapshot(
     .select()
     .single()
 
-  if (error) throw error
+  // Handle unique constraint violation (already exists)
+  if (error) {
+    if (error.code === '23505') {
+      // Snapshot already exists, fetch it instead
+      const existing = await getInvestmentSnapshot(year, month)
+      if (existing) {
+        return {
+          id: existing.id,
+          group_id: existing.group_id,
+          year: existing.year,
+          month: existing.month,
+          exchange_rate: existing.exchange_rate,
+          created_at: existing.created_at,
+        }
+      }
+    }
+    throw error
+  }
 
   return data as InvestmentSnapshot
 }
@@ -129,17 +146,31 @@ export async function getOrCreateInvestmentSnapshot(
   year: number,
   month: number
 ): Promise<InvestmentSnapshotWithItems> {
-  const existing = await getInvestmentSnapshot(year, month)
+  // 먼저 조회
+  let existing = await getInvestmentSnapshot(year, month)
 
   if (existing) {
     return existing
   }
 
-  const newSnapshot = await createInvestmentSnapshot(year, month)
+  // 없으면 생성 시도
+  try {
+    const newSnapshot = await createInvestmentSnapshot(year, month)
 
-  return {
-    ...newSnapshot,
-    investment_items: []
+    return {
+      ...newSnapshot,
+      investment_items: []
+    }
+  } catch (error: any) {
+    // 생성 중 에러 발생 시 (race condition으로 인한 중복 등) 다시 조회
+    if (error?.code === '23505') {
+      existing = await getInvestmentSnapshot(year, month)
+      if (existing) {
+        return existing
+      }
+    }
+    // 그 외 에러는 던지기
+    throw error
   }
 }
 
