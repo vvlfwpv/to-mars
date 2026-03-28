@@ -95,10 +95,6 @@ export function PortfolioChart({ sectorsWithTargets, actualStockMap }: Portfolio
                 data={data}
                 cx="50%"
                 cy="50%"
-                labelLine={false}
-                label={({ name, value }) =>
-                  value > 3 ? `${name} ${value.toFixed(1)}%` : ''
-                }
                 outerRadius={outerRadius}
                 fill="#8884d8"
                 dataKey="value"
