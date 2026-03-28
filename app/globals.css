@@ -57,6 +57,9 @@
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
   }
+  svg:focus, svg *:focus {
+    outline: none;
+  }
 }
 
 /* Theme Variants */
