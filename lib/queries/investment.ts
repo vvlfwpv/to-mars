@@ -142,3 +142,35 @@ export async function getOrCreateInvestmentSnapshot(
     investment_items: []
   }
 }
+
+/**
+ * 가장 최근 Investment Snapshot 조회 (items 포함)
+ */
+export async function getLatestInvestmentSnapshot(): Promise<InvestmentSnapshotWithItems | null> {
+  const supabase = await createServerClient()
+
+  // Get current user's group
+  const groupId = await getCurrentUserGroupId()
+
+  const { data, error } = await supabase
+    .from('investment_snapshots')
+    .select(`
+      *,
+      investment_items (*)
+    `)
+    .eq('group_id', groupId)
+    .order('year', { ascending: false })
+    .order('month', { ascending: false })
+    .order('created_at', { referencedTable: 'investment_items', ascending: true })
+    .limit(1)
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') {
+      return null
+    }
+    throw error
+  }
+
+  return data as InvestmentSnapshotWithItems
+}

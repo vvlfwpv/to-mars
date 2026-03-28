@@ -23,6 +23,7 @@ const navItems = [
   { href: '/', label: 'Dashboard' },
   { href: '/balance', label: 'Balance' },
   { href: '/investment', label: 'Investment' },
+  { href: '/portfolio', label: 'Portfolio' },
   { href: '/cashflow', label: 'Cashflow' },
   { href: '/settings', label: 'Settings' },
 ]
