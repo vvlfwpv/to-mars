@@ -93,6 +93,44 @@ export async function getAllBalanceSnapshotsWithItems(): Promise<BalanceSnapshot
 }
 
 /**
+ * 특정 년월 이후의 Balance Snapshots 조회 (items 포함, 최근 N개월용)
+ */
+export async function getRecentBalanceSnapshotsWithItems(
+  fromYear: number,
+  fromMonth: number
+): Promise<BalanceSnapshotWithItems[]> {
+  const supabase = await createServerClient()
+  const groupId = await getCurrentUserGroupId()
+
+  const { data, error } = await supabase
+    .from('balance_snapshots')
+    .select(`
+      id,
+      group_id,
+      year,
+      month,
+      created_at,
+      balance_items (
+        id,
+        amount,
+        category_level1,
+        category_level2,
+        category_level3
+      )
+    `)
+    .eq('group_id', groupId)
+    .gte('year', fromYear)
+    .order('year', { ascending: false })
+    .order('month', { ascending: false })
+
+  if (error) throw error
+
+  return (data as BalanceSnapshotWithItems[]).filter(
+    (s) => s.year > fromYear || (s.year === fromYear && s.month >= fromMonth)
+  )
+}
+
+/**
  * Balance Snapshot 생성 (빈 스냅샷)
  */
 export async function createBalanceSnapshot(

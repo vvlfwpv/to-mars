@@ -97,6 +97,48 @@ export async function getAllInvestmentSnapshotsWithItems(): Promise<InvestmentSn
 }
 
 /**
+ * 특정 년월 이후의 Investment Snapshots 조회 (items 포함, 최근 N개월용)
+ */
+export async function getRecentInvestmentSnapshotsWithItems(
+  fromYear: number,
+  fromMonth: number
+): Promise<InvestmentSnapshotWithItems[]> {
+  const supabase = await createServerClient()
+  const groupId = await getCurrentUserGroupId()
+
+  const { data, error } = await supabase
+    .from('investment_snapshots')
+    .select(`
+      id,
+      group_id,
+      year,
+      month,
+      exchange_rate,
+      created_at,
+      investment_items (
+        id,
+        principal,
+        month_end_value,
+        category,
+        code,
+        name,
+        quantity,
+        currency
+      )
+    `)
+    .eq('group_id', groupId)
+    .gte('year', fromYear)
+    .order('year', { ascending: false })
+    .order('month', { ascending: false })
+
+  if (error) throw error
+
+  return (data as InvestmentSnapshotWithItems[]).filter(
+    (s) => s.year > fromYear || (s.year === fromYear && s.month >= fromMonth)
+  )
+}
+
+/**
  * Investment Snapshot 생성 (빈 스냅샷)
  */
 export async function createInvestmentSnapshot(
