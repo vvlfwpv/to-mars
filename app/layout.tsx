@@ -17,6 +17,12 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "To Mars - Personal Finance Management",
   description: "Track your balance, investments, and cashflow to reach your financial goals",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "To Mars",
+  },
 };
 
 export default function RootLayout({
