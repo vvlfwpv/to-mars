@@ -78,30 +78,30 @@ export function InvestmentTable({ items, onEdit, onDelete, currentPrices = {}, e
             <Table>
               <TableHeader>
                 <TableRow className="border-border/40 hover:bg-transparent">
-                  <TableHead className="h-9 text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                  <TableHead className="h-9 whitespace-nowrap text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                     대분류
                   </TableHead>
-                  <TableHead className="h-9 text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                  <TableHead className="h-9 whitespace-nowrap text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                     종목코드
                   </TableHead>
-                  <TableHead className="h-9 text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                  <TableHead className="h-9 whitespace-nowrap text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                     종목명
                   </TableHead>
-                  <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                  <TableHead className="h-9 whitespace-nowrap text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                     원금
                   </TableHead>
-                  <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                  <TableHead className="h-9 whitespace-nowrap text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                     월말평가액
                   </TableHead>
-                  <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                  <TableHead className="h-9 whitespace-nowrap text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                     수량
                   </TableHead>
                   {hasPrices && (
-                    <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                    <TableHead className="h-9 whitespace-nowrap text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                       현재가
                     </TableHead>
                   )}
-                  <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                  <TableHead className="h-9 whitespace-nowrap text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                     액션
                   </TableHead>
                 </TableRow>
@@ -134,10 +134,10 @@ export function InvestmentTable({ items, onEdit, onDelete, currentPrices = {}, e
 
                     return (
                       <TableRow key={item.id} className="border-border/40">
-                        <TableCell className="text-xs sm:text-sm">{item.category}</TableCell>
-                        <TableCell className="text-xs sm:text-sm">{item.code || '-'}</TableCell>
-                        <TableCell className="text-xs sm:text-sm">{item.name}</TableCell>
-                        <TableCell className="text-right text-xs tabular-nums sm:text-sm">
+                        <TableCell className="whitespace-nowrap text-xs sm:text-sm">{item.category}</TableCell>
+                        <TableCell className="whitespace-nowrap text-xs sm:text-sm">{item.code || '-'}</TableCell>
+                        <TableCell className="whitespace-nowrap text-xs sm:text-sm">{item.name}</TableCell>
+                        <TableCell className="whitespace-nowrap text-right text-xs tabular-nums sm:text-sm">
                           <div>
                             {itemCurrency === 'USD' && <span className="mr-0.5 text-[10px] text-muted-foreground sm:text-xs">{getCurrencySymbol(itemCurrency)}</span>}
                             {formatAmount(Number(item.principal))}
@@ -149,7 +149,7 @@ export function InvestmentTable({ items, onEdit, onDelete, currentPrices = {}, e
                             </div>
                           )}
                         </TableCell>
-                        <TableCell className="text-right text-xs tabular-nums sm:text-sm">
+                        <TableCell className="whitespace-nowrap text-right text-xs tabular-nums sm:text-sm">
                           <div>
                             {itemCurrency === 'USD' && <span className="mr-0.5 text-[10px] text-muted-foreground sm:text-xs">{getCurrencySymbol(itemCurrency)}</span>}
                             {formatAmount(Number(item.month_end_value))}
@@ -164,11 +164,11 @@ export function InvestmentTable({ items, onEdit, onDelete, currentPrices = {}, e
                             ({itemProfit >= 0 ? '+' : ''}{itemProfitRate.toFixed(2)}%)
                           </div>
                         </TableCell>
-                        <TableCell className="text-right text-xs tabular-nums sm:text-sm">
+                        <TableCell className="whitespace-nowrap text-right text-xs tabular-nums sm:text-sm">
                           {item.quantity ? Number(item.quantity).toLocaleString() : '-'}
                         </TableCell>
                         {hasPrices && (
-                          <TableCell className="text-right text-xs tabular-nums sm:text-sm">
+                          <TableCell className="whitespace-nowrap text-right text-xs tabular-nums sm:text-sm">
                             {currentPrices[item.id] ? (
                               <div>
                                 <div className="text-emerald-600 dark:text-emerald-500">
@@ -192,7 +192,7 @@ export function InvestmentTable({ items, onEdit, onDelete, currentPrices = {}, e
                             )}
                           </TableCell>
                         )}
-                        <TableCell className="text-right">
+                        <TableCell className="whitespace-nowrap text-right">
                           <div className="flex justify-end gap-1">
                             <Button
                               variant="ghost"

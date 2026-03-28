@@ -41,19 +41,19 @@ export function BalanceTable({ items, onEdit, onDelete }: BalanceTableProps) {
             <Table>
               <TableHeader>
                 <TableRow className="border-border/40 hover:bg-transparent">
-                  <TableHead className="h-9 text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                  <TableHead className="h-9 whitespace-nowrap text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                     Level 1
                   </TableHead>
-                  <TableHead className="h-9 text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                  <TableHead className="h-9 whitespace-nowrap text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                     Level 2
                   </TableHead>
-                  <TableHead className="h-9 text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                  <TableHead className="h-9 whitespace-nowrap text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                     Level 3
                   </TableHead>
-                  <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                  <TableHead className="h-9 whitespace-nowrap text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                     금액
                   </TableHead>
-                  <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                  <TableHead className="h-9 whitespace-nowrap text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                     액션
                   </TableHead>
                 </TableRow>
@@ -78,14 +78,14 @@ export function BalanceTable({ items, onEdit, onDelete }: BalanceTableProps) {
                 ) : (
                   items.map((item) => (
                     <TableRow key={item.id} className="border-border/40">
-                      <TableCell className="text-xs sm:text-sm">{item.category_level1}</TableCell>
-                      <TableCell className="text-xs sm:text-sm">{item.category_level2}</TableCell>
-                      <TableCell className="text-xs sm:text-sm">{item.category_level3}</TableCell>
-                      <TableCell className="text-right text-xs tabular-nums sm:text-sm">
+                      <TableCell className="whitespace-nowrap text-xs sm:text-sm">{item.category_level1}</TableCell>
+                      <TableCell className="whitespace-nowrap text-xs sm:text-sm">{item.category_level2}</TableCell>
+                      <TableCell className="whitespace-nowrap text-xs sm:text-sm">{item.category_level3}</TableCell>
+                      <TableCell className="whitespace-nowrap text-right text-xs tabular-nums sm:text-sm">
                         {Number(item.amount).toLocaleString()}
                         <span className="ml-0.5 text-[10px] text-muted-foreground sm:text-xs">원</span>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="whitespace-nowrap text-right">
                         <div className="flex justify-end gap-1">
                           <Button
                             variant="ghost"

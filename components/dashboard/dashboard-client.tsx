@@ -491,19 +491,19 @@ export function DashboardClient({
                   <Table>
                     <TableHeader>
                       <TableRow className="border-border/40 hover:bg-transparent">
-                        <TableHead className="h-9 text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                        <TableHead className="h-9 whitespace-nowrap text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                           년월
                         </TableHead>
-                        <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                        <TableHead className="h-9 whitespace-nowrap text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                           총 자산
                         </TableHead>
-                        <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                        <TableHead className="h-9 whitespace-nowrap text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                           총 부채
                         </TableHead>
-                        <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                        <TableHead className="h-9 whitespace-nowrap text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                           순자산
                         </TableHead>
-                        <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                        <TableHead className="h-9 whitespace-nowrap text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                           {viewMode === 'monthly' ? '전월대비' : '전년대비'}
                         </TableHead>
                       </TableRow>
@@ -539,22 +539,22 @@ export function DashboardClient({
                             className="cursor-pointer border-border/40 transition-colors hover:bg-muted/50"
                             onClick={() => handleBalanceRowClick(data.year, data.month)}
                           >
-                            <TableCell className="text-xs font-medium sm:text-sm">
+                            <TableCell className="whitespace-nowrap text-xs font-medium sm:text-sm">
                               {data.year}년 {data.month}월
                             </TableCell>
-                            <TableCell className="text-right text-xs tabular-nums sm:text-sm">
+                            <TableCell className="whitespace-nowrap text-right text-xs tabular-nums sm:text-sm">
                               {data.totalAssets.toLocaleString()}
                               <span className="ml-0.5 text-[10px] text-muted-foreground sm:text-xs">원</span>
                             </TableCell>
-                            <TableCell className="text-right text-xs tabular-nums sm:text-sm">
+                            <TableCell className="whitespace-nowrap text-right text-xs tabular-nums sm:text-sm">
                               {data.totalLiabilities.toLocaleString()}
                               <span className="ml-0.5 text-[10px] text-muted-foreground sm:text-xs">원</span>
                             </TableCell>
-                            <TableCell className="text-right text-xs font-semibold tabular-nums sm:text-sm">
+                            <TableCell className="whitespace-nowrap text-right text-xs font-semibold tabular-nums sm:text-sm">
                               {data.netAssets.toLocaleString()}
                               <span className="ml-0.5 text-[10px] text-muted-foreground sm:text-xs">원</span>
                             </TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="whitespace-nowrap text-right">
                               {data.monthOverMonthChange === 0 ? (
                                 <span className="text-[10px] text-muted-foreground sm:text-xs">-</span>
                               ) : (
@@ -662,19 +662,19 @@ export function DashboardClient({
                   <Table>
                     <TableHeader>
                       <TableRow className="border-border/40 hover:bg-transparent">
-                        <TableHead className="h-9 text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                        <TableHead className="h-9 whitespace-nowrap text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                           년월
                         </TableHead>
-                        <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                        <TableHead className="h-9 whitespace-nowrap text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                           총 원금
                         </TableHead>
-                        <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                        <TableHead className="h-9 whitespace-nowrap text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                           총 평가액
                         </TableHead>
-                        <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                        <TableHead className="h-9 whitespace-nowrap text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                           평가손익
                         </TableHead>
-                        <TableHead className="h-9 text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
+                        <TableHead className="h-9 whitespace-nowrap text-right text-[10px] font-medium text-muted-foreground sm:h-11 sm:text-xs">
                           수익률
                         </TableHead>
                       </TableRow>
@@ -710,19 +710,19 @@ export function DashboardClient({
                             className="cursor-pointer border-border/40 transition-colors hover:bg-muted/50"
                             onClick={() => handleInvestmentRowClick(data.year, data.month)}
                           >
-                            <TableCell className="text-xs font-medium sm:text-sm">
+                            <TableCell className="whitespace-nowrap text-xs font-medium sm:text-sm">
                               {data.year}년 {data.month}월
                             </TableCell>
-                            <TableCell className="text-right text-xs tabular-nums sm:text-sm">
+                            <TableCell className="whitespace-nowrap text-right text-xs tabular-nums sm:text-sm">
                               {data.totalPrincipal.toLocaleString()}
                               <span className="ml-0.5 text-[10px] text-muted-foreground sm:text-xs">원</span>
                             </TableCell>
-                            <TableCell className="text-right text-xs tabular-nums sm:text-sm">
+                            <TableCell className="whitespace-nowrap text-right text-xs tabular-nums sm:text-sm">
                               {data.totalValue.toLocaleString()}
                               <span className="ml-0.5 text-[10px] text-muted-foreground sm:text-xs">원</span>
                             </TableCell>
                             <TableCell
-                              className={`text-right text-xs font-medium tabular-nums sm:text-sm ${
+                              className={`whitespace-nowrap text-right text-xs font-medium tabular-nums sm:text-sm ${
                                 data.profitLoss >= 0
                                   ? 'text-emerald-600 dark:text-emerald-500'
                                   : 'text-rose-600 dark:text-rose-500'
@@ -733,7 +733,7 @@ export function DashboardClient({
                               <span className="ml-0.5 text-[10px] sm:text-xs">원</span>
                             </TableCell>
                             <TableCell
-                              className={`text-right text-xs font-semibold tabular-nums sm:text-sm ${
+                              className={`whitespace-nowrap text-right text-xs font-semibold tabular-nums sm:text-sm ${
                                 data.profitRate >= 0
                                   ? 'text-emerald-600 dark:text-emerald-500'
                                   : 'text-rose-600 dark:text-rose-500'
