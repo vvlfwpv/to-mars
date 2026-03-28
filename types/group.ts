@@ -3,6 +3,9 @@ import { UUID, Timestamp } from './database'
 export type Group = {
   id: UUID
   name: string
+  description?: string | null
+  is_sample?: boolean
+  is_read_only?: boolean
   created_at: Timestamp
 }
 

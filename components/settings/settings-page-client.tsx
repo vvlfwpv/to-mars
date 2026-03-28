@@ -1,11 +1,14 @@
 'use client'
 
+import { useState } from 'react'
 import { useTheme, ThemeVariant, ColorMode } from '@/contexts/theme-context'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'
-import { Palette, Sun, Moon, Check } from 'lucide-react'
+import { Palette, Sun, Moon, Check, Users, Plus } from 'lucide-react'
+import type { Group } from '@/types/group'
+import { GroupManageDialog } from './group-manage-dialog'
 
 const themeOptions: { value: ThemeVariant; label: string; description: string }[] = [
   {
@@ -30,8 +33,16 @@ const themeOptions: { value: ThemeVariant; label: string; description: string }[
   },
 ]
 
-export function SettingsPageClient() {
+type SettingsPageClientProps = {
+  userGroups: Group[]
+  currentGroupId: string
+}
+
+export function SettingsPageClient({ userGroups, currentGroupId }: SettingsPageClientProps) {
   const { themeVariant, colorMode, setThemeVariant, setColorMode } = useTheme()
+  const [groupDialogOpen, setGroupDialogOpen] = useState(false)
+
+  const currentGroup = userGroups.find(g => g.id === currentGroupId)
 
   return (
     <div className="min-h-screen theme-gradient-bg">
@@ -45,6 +56,48 @@ export function SettingsPageClient() {
         </div>
 
         <div className="space-y-6">
+          {/* Group Management */}
+          <Card className="border-border/40 shadow-sm">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <div className="rounded-lg bg-primary/10 p-2">
+                  <Users className="h-4 w-4 text-primary" />
+                </div>
+                <div>
+                  <CardTitle className="text-base sm:text-lg">그룹 관리</CardTitle>
+                  <CardDescription className="text-xs sm:text-sm">
+                    그룹을 생성하고 관리하세요
+                  </CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="rounded-lg border p-4">
+                <div className="mb-3 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-medium">현재 그룹</p>
+                    <p className="text-xs text-muted-foreground">
+                      {currentGroup?.name || '그룹 없음'}
+                      {currentGroup?.is_sample && ' (샘플)'}
+                    </p>
+                  </div>
+                  <Button size="sm" onClick={() => setGroupDialogOpen(true)}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    그룹 추가
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs text-muted-foreground">
+                    내 그룹: {userGroups.filter(g => !g.is_sample).length}개
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    그룹 전환은 상단 네비게이션 바에서 가능합니다
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Color Mode */}
           <Card className="border-border/40 shadow-sm">
             <CardHeader>
@@ -153,6 +206,12 @@ export function SettingsPageClient() {
           </Card>
         </div>
       </div>
+
+      {/* Group Manage Dialog */}
+      <GroupManageDialog
+        open={groupDialogOpen}
+        onOpenChange={setGroupDialogOpen}
+      />
     </div>
   )
 }

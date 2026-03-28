@@ -12,11 +12,22 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { Menu, Rocket } from 'lucide-react'
 import { logout } from '@/lib/actions/auth'
+import { switchGroup } from '@/lib/actions/group'
+import type { Group } from '@/types/group'
 
 type NavigationProps = {
   userEmail: string
+  userGroups: Group[]
+  currentGroupId: string
 }
 
 const navItems = [
@@ -28,9 +39,21 @@ const navItems = [
   { href: '/settings', label: 'Settings' },
 ]
 
-export function Navigation({ userEmail }: NavigationProps) {
+export function Navigation({ userEmail, userGroups, currentGroupId }: NavigationProps) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
+  const currentGroup = userGroups.find(g => g.id === currentGroupId)
+
+  const handleGroupChange = async (groupId: string) => {
+    try {
+      await switchGroup(groupId)
+      window.location.reload()
+    } catch (error) {
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Failed to switch group:', error)
+      }
+    }
+  }
 
   return (
     <div className="sticky top-0 z-50 border-b theme-nav-bg backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -43,8 +66,27 @@ export function Navigation({ userEmail }: NavigationProps) {
           </Link>
         </div>
 
+        {/* Group Selector - Desktop */}
+        <div className="ml-4 hidden md:block">
+          <Select value={currentGroupId} onValueChange={handleGroupChange}>
+            <SelectTrigger className="w-[180px] h-9">
+              <SelectValue>
+                {currentGroup?.name || '그룹 선택'}
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent>
+              {userGroups.map((group) => (
+                <SelectItem key={group.id} value={group.id}>
+                  {group.name}
+                  {group.is_sample && ' (샘플)'}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Desktop Navigation */}
-        <nav className="ml-8 hidden items-center gap-1 md:flex">
+        <nav className="ml-4 hidden items-center gap-1 md:flex">
           {navItems.map((item) => (
             <Link
               key={item.href}
@@ -93,7 +135,30 @@ export function Navigation({ userEmail }: NavigationProps) {
                   To Mars
                 </SheetTitle>
               </SheetHeader>
-              <div className="mt-8 flex flex-col gap-1">
+
+              {/* Group Selector - Mobile */}
+              <div className="mt-6">
+                <label className="mb-2 block px-3 text-xs font-medium text-muted-foreground">
+                  현재 그룹
+                </label>
+                <Select value={currentGroupId} onValueChange={handleGroupChange}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue>
+                      {currentGroup?.name || '그룹 선택'}
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {userGroups.map((group) => (
+                      <SelectItem key={group.id} value={group.id}>
+                        {group.name}
+                        {group.is_sample && ' (샘플)'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="mt-6 flex flex-col gap-1">
                 {navItems.map((item) => (
                   <Link
                     key={item.href}
