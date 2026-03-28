@@ -1,4 +1,4 @@
-import { getOrCreateInvestmentSnapshot, getAllInvestmentSnapshots } from '@/lib/queries/investment'
+import { getOrCreateInvestmentSnapshot, getLatestInvestmentSnapshotMeta } from '@/lib/queries/investment'
 import { InvestmentPageClient } from '@/components/investment/investment-page-client'
 
 // 캐싱 비활성화 - 항상 최신 데이터 표시
@@ -18,12 +18,9 @@ export default async function InvestmentPage({ searchParams }: PageProps) {
   const month = parseInt(params.month || currentMonth.toString())
 
   const snapshot = await getOrCreateInvestmentSnapshot(year, month)
-
-  // 모든 스냅샷 조회해서 현재가 마지막 스냅샷인지 확인
-  const allSnapshots = await getAllInvestmentSnapshots()
+  const latestMeta = await getLatestInvestmentSnapshotMeta()
   const isLatestSnapshot =
-    allSnapshots.length === 0 ||
-    (allSnapshots[0].year === year && allSnapshots[0].month === month)
+    !latestMeta || (latestMeta.year === year && latestMeta.month === month)
 
   return (
     <InvestmentPageClient

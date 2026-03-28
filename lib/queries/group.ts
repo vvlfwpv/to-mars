@@ -1,10 +1,12 @@
+import { cache } from 'react'
 import { createServerClient } from '@/lib/supabase/client'
 import type { Group, GroupMember } from '@/types/group'
 
 /**
  * 현재 로그인한 사용자의 group_id를 조회
+ * React cache()로 같은 요청 내에서 중복 호출 방지
  */
-export async function getCurrentUserGroupId(): Promise<string> {
+export const getCurrentUserGroupId = cache(async (): Promise<string> => {
   const supabase = await createServerClient()
 
   // Get current user
@@ -23,7 +25,7 @@ export async function getCurrentUserGroupId(): Promise<string> {
   }
 
   return data.group_id
-}
+})
 
 /**
  * 특정 그룹 조회

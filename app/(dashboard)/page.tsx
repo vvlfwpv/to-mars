@@ -7,8 +7,10 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export default async function DashboardPage() {
-  const balanceSnapshots = await getAllBalanceSnapshotsWithItems()
-  const investmentSnapshots = await getAllInvestmentSnapshotsWithItems()
+  const [balanceSnapshots, investmentSnapshots] = await Promise.all([
+    getAllBalanceSnapshotsWithItems(),
+    getAllInvestmentSnapshotsWithItems(),
+  ])
 
   return (
     <DashboardClient

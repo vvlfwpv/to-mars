@@ -144,6 +144,30 @@ export async function getOrCreateInvestmentSnapshot(
 }
 
 /**
+ * 가장 최근 Investment Snapshot의 year/month만 조회 (경량)
+ */
+export async function getLatestInvestmentSnapshotMeta(): Promise<{ year: number; month: number } | null> {
+  const supabase = await createServerClient()
+  const groupId = await getCurrentUserGroupId()
+
+  const { data, error } = await supabase
+    .from('investment_snapshots')
+    .select('year, month')
+    .eq('group_id', groupId)
+    .order('year', { ascending: false })
+    .order('month', { ascending: false })
+    .limit(1)
+    .single()
+
+  if (error) {
+    if (error.code === 'PGRST116') return null
+    throw error
+  }
+
+  return data
+}
+
+/**
  * 가장 최근 Investment Snapshot 조회 (items 포함)
  */
 export async function getLatestInvestmentSnapshot(): Promise<InvestmentSnapshotWithItems | null> {

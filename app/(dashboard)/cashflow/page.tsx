@@ -7,8 +7,10 @@ export const dynamic = 'force-dynamic'
 export const revalidate = 0
 
 export default async function CashflowPage() {
-  const items = await getAllCashflowItems()
-  const owners = await getAllOwners()
+  const [items, owners] = await Promise.all([
+    getAllCashflowItems(),
+    getAllOwners(),
+  ])
 
   return <CashflowPageClient items={items} owners={owners} />
 }

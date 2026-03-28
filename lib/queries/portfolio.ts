@@ -31,8 +31,10 @@ export async function getPortfolioTargets(): Promise<PortfolioTarget[]> {
 }
 
 export async function getPortfolioSectorsWithTargets(): Promise<PortfolioSectorWithTargets[]> {
-  const sectors = await getPortfolioSectors()
-  const targets = await getPortfolioTargets()
+  const [sectors, targets] = await Promise.all([
+    getPortfolioSectors(),
+    getPortfolioTargets(),
+  ])
 
   return sectors.map(sector => ({
     ...sector,
