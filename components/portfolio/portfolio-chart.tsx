@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
@@ -26,6 +26,14 @@ const COLORS = [
 
 export function PortfolioChart({ sectorsWithTargets, actualStockMap }: PortfolioChartProps) {
   const [viewMode, setViewMode] = useState<'sector' | 'stock'>('sector')
+  const [outerRadius, setOuterRadius] = useState(120)
+
+  useEffect(() => {
+    const updateRadius = () => setOuterRadius(window.innerWidth < 640 ? 80 : 120)
+    updateRadius()
+    window.addEventListener('resize', updateRadius)
+    return () => window.removeEventListener('resize', updateRadius)
+  }, [])
 
   // 섹터별 데이터
   const sectorData = sectorsWithTargets.map((sector, index) => ({
@@ -91,7 +99,7 @@ export function PortfolioChart({ sectorsWithTargets, actualStockMap }: Portfolio
                 label={({ name, value }) =>
                   value > 3 ? `${name} ${value.toFixed(1)}%` : ''
                 }
-                outerRadius={window.innerWidth < 640 ? 80 : 120}
+                outerRadius={outerRadius}
                 fill="#8884d8"
                 dataKey="value"
               >
