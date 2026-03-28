@@ -41,28 +41,21 @@ import { determineCurrency, convertToKRW } from '@/lib/utils/currency'
 type DashboardClientProps = {
   balanceSnapshots: BalanceSnapshotWithItems[]
   investmentSnapshots: InvestmentSnapshotWithItems[]
-  hasOlderData: boolean
 }
 
 export function DashboardClient({
   balanceSnapshots,
   investmentSnapshots,
-  hasOlderData,
 }: DashboardClientProps) {
   const router = useRouter()
-
-  const [loadedBalance, setLoadedBalance] = useState(balanceSnapshots)
-  const [loadedInvestment, setLoadedInvestment] = useState(investmentSnapshots)
-  const [isLoadingAll, setIsLoadingAll] = useState(false)
-  const [hasMore, setHasMore] = useState(hasOlderData)
 
   // 뷰 모드: 'monthly' | 'yearly'
   const [viewMode, setViewMode] = useState<'monthly' | 'yearly'>('monthly')
 
   // 모든 연월 목록 추출
   const allYearMonths = useMemo(() => {
-    const balanceDates = loadedBalance.map((s) => ({ year: s.year, month: s.month }))
-    const investmentDates = loadedInvestment.map((s) => ({ year: s.year, month: s.month }))
+    const balanceDates = balanceSnapshots.map((s) => ({ year: s.year, month: s.month }))
+    const investmentDates = investmentSnapshots.map((s) => ({ year: s.year, month: s.month }))
     const allDates = [...balanceDates, ...investmentDates]
 
     // 중복 제거 및 정렬
@@ -74,7 +67,7 @@ export function DashboardClient({
     })
 
     return uniqueDates
-  }, [loadedBalance, loadedInvestment])
+  }, [balanceSnapshots, investmentSnapshots])
 
   const [startDate, setStartDate] = useState<string>(
     allYearMonths.length > 0 ? `${allYearMonths[0].year}-${allYearMonths[0].month}` : ''
@@ -87,32 +80,32 @@ export function DashboardClient({
 
   // 날짜 범위에 따른 필터링
   const filteredBalanceSnapshots = useMemo(() => {
-    if (!startDate || !endDate) return loadedBalance
+    if (!startDate || !endDate) return balanceSnapshots
 
     const [startYear, startMonth] = startDate.split('-').map(Number)
     const [endYear, endMonth] = endDate.split('-').map(Number)
 
-    return loadedBalance.filter((s) => {
+    return balanceSnapshots.filter((s) => {
       const snapshotDate = s.year * 100 + s.month
       const start = startYear * 100 + startMonth
       const end = endYear * 100 + endMonth
       return snapshotDate >= start && snapshotDate <= end
     })
-  }, [loadedBalance, startDate, endDate])
+  }, [balanceSnapshots, startDate, endDate])
 
   const filteredInvestmentSnapshots = useMemo(() => {
-    if (!startDate || !endDate) return loadedInvestment
+    if (!startDate || !endDate) return investmentSnapshots
 
     const [startYear, startMonth] = startDate.split('-').map(Number)
     const [endYear, endMonth] = endDate.split('-').map(Number)
 
-    return loadedInvestment.filter((s) => {
+    return investmentSnapshots.filter((s) => {
       const snapshotDate = s.year * 100 + s.month
       const start = startYear * 100 + startMonth
       const end = endYear * 100 + endMonth
       return snapshotDate >= start && snapshotDate <= end
     })
-  }, [loadedInvestment, startDate, endDate])
+  }, [investmentSnapshots, startDate, endDate])
 
   // 재무상태표 계산 (전월대비 포함)
   const balanceData = useMemo(() => {
@@ -242,28 +235,6 @@ export function DashboardClient({
       investmentProfitRate: latestInvestment?.profitRate || 0,
     }
   }, [balanceData, investmentData])
-
-  const handleLoadAll = async () => {
-    setIsLoadingAll(true)
-    try {
-      const res = await fetch('/api/snapshots/all')
-      const data = await res.json()
-      setLoadedBalance(data.balanceSnapshots)
-      setLoadedInvestment(data.investmentSnapshots)
-      setHasMore(false)
-
-      const allDates = [
-        ...data.balanceSnapshots.map((s: BalanceSnapshotWithItems) => ({ year: s.year, month: s.month })),
-        ...data.investmentSnapshots.map((s: InvestmentSnapshotWithItems) => ({ year: s.year, month: s.month })),
-      ].sort((a, b) => a.year !== b.year ? a.year - b.year : a.month - b.month)
-
-      if (allDates.length > 0) {
-        setStartDate(`${allDates[0].year}-${allDates[0].month}`)
-      }
-    } finally {
-      setIsLoadingAll(false)
-    }
-  }
 
   const checkBalanceSnapshotExists = async (
     year: number,
@@ -508,19 +479,6 @@ export function DashboardClient({
                   </>
                 )}
               </Button>
-
-              {/* 전체 기간 로드 */}
-              {hasMore && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleLoadAll}
-                  disabled={isLoadingAll}
-                  className="h-8 gap-1.5 px-2.5 text-xs"
-                >
-                  {isLoadingAll ? '불러오는 중...' : '전체 기간'}
-                </Button>
-              )}
             </div>
           </div>
 
