@@ -16,6 +16,8 @@ export async function copyBalanceSnapshotToNextMonth(
   overwrite: boolean = false
 ): Promise<{ year: number; month: number }> {
   const supabase = await createServerClient()
+  const { getCurrentUserGroupId } = await import('@/lib/queries/group')
+  const groupId = await getCurrentUserGroupId()
 
   // 다음 달 계산
   let targetYear = sourceYear
@@ -29,6 +31,7 @@ export async function copyBalanceSnapshotToNextMonth(
   const { data: existingSnapshot } = await supabase
     .from('balance_snapshots')
     .select('id')
+    .eq('group_id', groupId)
     .eq('year', targetYear)
     .eq('month', targetMonth)
     .single()
@@ -53,7 +56,7 @@ export async function copyBalanceSnapshotToNextMonth(
     // 새 스냅샷 생성
     const { data: newSnapshot, error: snapshotError } = await supabase
       .from('balance_snapshots')
-      .insert({ year: targetYear, month: targetMonth })
+      .insert({ group_id: groupId, year: targetYear, month: targetMonth })
       .select()
       .single()
 
@@ -92,6 +95,8 @@ export async function copyInvestmentSnapshotToNextMonth(
   overwrite: boolean = false
 ): Promise<{ year: number; month: number }> {
   const supabase = await createServerClient()
+  const { getCurrentUserGroupId } = await import('@/lib/queries/group')
+  const groupId = await getCurrentUserGroupId()
 
   // 다음 달 계산
   let targetYear = sourceYear
@@ -105,6 +110,7 @@ export async function copyInvestmentSnapshotToNextMonth(
   const { data: existingSnapshot } = await supabase
     .from('investment_snapshots')
     .select('id')
+    .eq('group_id', groupId)
     .eq('year', targetYear)
     .eq('month', targetMonth)
     .single()
@@ -132,7 +138,7 @@ export async function copyInvestmentSnapshotToNextMonth(
     // 새 스냅샷 생성
     const { data: newSnapshot, error: snapshotError } = await supabase
       .from('investment_snapshots')
-      .insert({ year: targetYear, month: targetMonth, exchange_rate: exchangeRate })
+      .insert({ group_id: groupId, year: targetYear, month: targetMonth, exchange_rate: exchangeRate })
       .select()
       .single()
 
@@ -166,14 +172,18 @@ export async function copyInvestmentSnapshotToNextMonth(
 
 /**
  * Balance Snapshot 삭제 (items 포함)
+ * @returns 리다이렉트할 URL (다른 스냅샷이 있으면 그 URL, 없으면 dashboard)
  */
-export async function deleteBalanceSnapshot(year: number, month: number): Promise<void> {
+export async function deleteBalanceSnapshot(year: number, month: number): Promise<string> {
   const supabase = await createServerClient()
+  const { getCurrentUserGroupId } = await import('@/lib/queries/group')
+  const groupId = await getCurrentUserGroupId()
 
-  // 스냅샷 조회
+  // 스냅샷 조회 (group_id 포함)
   const { data: snapshot, error: findError } = await supabase
     .from('balance_snapshots')
     .select('id')
+    .eq('group_id', groupId)
     .eq('year', year)
     .eq('month', month)
     .single()
@@ -198,9 +208,26 @@ export async function deleteBalanceSnapshot(year: number, month: number): Promis
 
   if (snapshotError) throw snapshotError
 
+  // 남은 스냅샷 중 가장 최신 것 찾기 (현재 그룹의 스냅샷만)
+  const { data: remainingSnapshots } = await supabase
+    .from('balance_snapshots')
+    .select('year, month')
+    .eq('group_id', groupId)
+    .order('year', { ascending: false })
+    .order('month', { ascending: false })
+    .limit(1)
+
   // Dashboard만 revalidate (balance 페이지는 revalidate하면 재생성됨)
   revalidatePath('/')
   revalidatePath('/', 'page')
+
+  // 리다이렉트 URL 반환
+  if (remainingSnapshots && remainingSnapshots.length > 0) {
+    const latest = remainingSnapshots[0]
+    return `/balance?year=${latest.year}&month=${latest.month}`
+  } else {
+    return '/'
+  }
 }
 
 /**
@@ -224,14 +251,18 @@ export async function updateInvestmentSnapshotExchangeRate(
 
 /**
  * Investment Snapshot 삭제 (items 포함)
+ * @returns 리다이렉트할 URL (다른 스냅샷이 있으면 그 URL, 없으면 dashboard)
  */
-export async function deleteInvestmentSnapshot(year: number, month: number): Promise<void> {
+export async function deleteInvestmentSnapshot(year: number, month: number): Promise<string> {
   const supabase = await createServerClient()
+  const { getCurrentUserGroupId } = await import('@/lib/queries/group')
+  const groupId = await getCurrentUserGroupId()
 
-  // 스냅샷 조회
+  // 스냅샷 조회 (group_id 포함)
   const { data: snapshot, error: findError } = await supabase
     .from('investment_snapshots')
     .select('id')
+    .eq('group_id', groupId)
     .eq('year', year)
     .eq('month', month)
     .single()
@@ -256,7 +287,24 @@ export async function deleteInvestmentSnapshot(year: number, month: number): Pro
 
   if (snapshotError) throw snapshotError
 
+  // 남은 스냅샷 중 가장 최신 것 찾기 (현재 그룹의 스냅샷만)
+  const { data: remainingSnapshots } = await supabase
+    .from('investment_snapshots')
+    .select('year, month')
+    .eq('group_id', groupId)
+    .order('year', { ascending: false })
+    .order('month', { ascending: false })
+    .limit(1)
+
   // Dashboard만 revalidate (investment 페이지는 revalidate하면 재생성됨)
   revalidatePath('/')
   revalidatePath('/', 'page')
+
+  // 리다이렉트 URL 반환
+  if (remainingSnapshots && remainingSnapshots.length > 0) {
+    const latest = remainingSnapshots[0]
+    return `/investment?year=${latest.year}&month=${latest.month}`
+  } else {
+    return '/'
+  }
 }
