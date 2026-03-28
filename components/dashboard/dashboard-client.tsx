@@ -596,7 +596,7 @@ export function DashboardClient({
               </CardContent>
             </Card>
 
-            {/* Chart */}
+            {/* Chart - 순자산 추이 */}
             {balanceData.length > 0 && (
               <Card className="border-border/40 shadow-sm">
                 <CardHeader className="space-y-1 pb-4">
@@ -646,6 +646,64 @@ export function DashboardClient({
                           activeDot={{ r: 5 }}
                         />
                       </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Chart - 순자산 증감 추이 */}
+            {balanceData.length > 0 && (
+              <Card className="border-border/40 shadow-sm">
+                <CardHeader className="space-y-1 pb-4">
+                  <CardTitle className="text-base font-semibold">
+                    {viewMode === 'monthly' ? '전월 대비 증감' : '전년 대비 증감'}
+                  </CardTitle>
+                  <CardDescription className="text-xs">
+                    {viewMode === 'monthly' ? '전월 대비 순자산 증감액을 확인하세요' : '전년 대비 순자산 증감액을 확인하세요'}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[280px] w-full sm:h-[320px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={balanceData.slice().reverse()}>
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke="hsl(var(--border))"
+                          opacity={0.3}
+                        />
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                          tickLine={{ stroke: 'hsl(var(--border))' }}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                          tickLine={{ stroke: 'hsl(var(--border))' }}
+                          tickFormatter={(value) => `${(value / 1000000).toFixed(0)}M`}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                            fontSize: '12px',
+                          }}
+                          formatter={(value) =>
+                            typeof value === 'number' ? value.toLocaleString() + '원' : ''
+                          }
+                        />
+                        <Legend wrapperStyle={{ fontSize: '12px' }} />
+                        <Bar
+                          dataKey="monthOverMonthChange"
+                          name={viewMode === 'monthly' ? '전월대비 증감' : '전년대비 증감'}
+                          radius={[4, 4, 0, 0]}
+                        >
+                          {balanceData.slice().reverse().map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.monthOverMonthChange >= 0 ? 'rgb(16, 185, 129)' : 'rgb(244, 63, 94)'} />
+                          ))}
+                        </Bar>
+                      </BarChart>
                     </ResponsiveContainer>
                   </div>
                 </CardContent>
@@ -751,7 +809,72 @@ export function DashboardClient({
               </CardContent>
             </Card>
 
-            {/* Chart */}
+            {/* Chart - 평가액 추이 */}
+            {investmentData.length > 0 && (
+              <Card className="border-border/40 shadow-sm">
+                <CardHeader className="space-y-1 pb-4">
+                  <CardTitle className="text-base font-semibold">평가액 추이</CardTitle>
+                  <CardDescription className="text-xs">
+                    월별 원금과 평가액 변화를 확인하세요
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-[280px] w-full sm:h-[320px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={investmentData.slice().reverse()}>
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          stroke="hsl(var(--border))"
+                          opacity={0.3}
+                        />
+                        <XAxis
+                          dataKey="name"
+                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                          tickLine={{ stroke: 'hsl(var(--border))' }}
+                        />
+                        <YAxis
+                          tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }}
+                          tickLine={{ stroke: 'hsl(var(--border))' }}
+                          tickFormatter={(value) => `${(value / 1000000).toFixed(0)}M`}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: 'hsl(var(--card))',
+                            border: '1px solid hsl(var(--border))',
+                            borderRadius: '8px',
+                            fontSize: '12px',
+                          }}
+                          formatter={(value) =>
+                            typeof value === 'number' ? value.toLocaleString() + '원' : ''
+                          }
+                        />
+                        <Legend wrapperStyle={{ fontSize: '12px' }} />
+                        <Line
+                          type="monotone"
+                          dataKey="totalPrincipal"
+                          name="총 원금"
+                          stroke="rgb(59, 130, 246)"
+                          strokeWidth={2}
+                          dot={{ r: 3, fill: 'rgb(59, 130, 246)' }}
+                          activeDot={{ r: 5 }}
+                        />
+                        <Line
+                          type="monotone"
+                          dataKey="totalValue"
+                          name="총 평가액"
+                          stroke="rgb(139, 92, 246)"
+                          strokeWidth={2}
+                          dot={{ r: 3, fill: 'rgb(139, 92, 246)' }}
+                          activeDot={{ r: 5 }}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Chart - 수익률 추이 */}
             {investmentData.length > 0 && (
               <Card className="border-border/40 shadow-sm">
                 <CardHeader className="space-y-1 pb-4">
