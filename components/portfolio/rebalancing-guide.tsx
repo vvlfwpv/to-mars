@@ -3,6 +3,7 @@
 import { ArrowUpRight, ArrowDownRight, Lightbulb } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { PortfolioSectorWithTargets } from '@/types/portfolio'
+import { formatAmount } from '@/lib/utils/currency'
 
 type RebalancingGuideProps = {
   sectorsWithTargets: PortfolioSectorWithTargets[]
@@ -101,7 +102,7 @@ export function RebalancingGuide({
                       {item.diff.toFixed(1)}%
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      약 {Math.abs(item.diffAmount).toLocaleString()}원
+                      약 {formatAmount(Math.abs(item.diffAmount))}원
                     </div>
                   </div>
                 </div>
@@ -134,7 +135,7 @@ export function RebalancingGuide({
                       +{item.diff.toFixed(1)}%
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      약 {item.diffAmount.toLocaleString()}원
+                      약 {formatAmount(item.diffAmount)}원
                     </div>
                   </div>
                 </div>

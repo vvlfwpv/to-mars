@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import type { PortfolioSectorWithTargets } from '@/types/portfolio'
 import { deletePortfolioSector } from '@/lib/actions/portfolio'
+import { formatAmount } from '@/lib/utils/currency'
 import { useRouter } from 'next/navigation'
 
 type SectorListProps = {
@@ -187,7 +188,7 @@ export function SectorList({
                                 {actualWeight.toFixed(1)}%
                               </td>
                               <td className="whitespace-nowrap p-2 text-right text-sm tabular-nums">
-                                {actualValue.toLocaleString()}원
+                                {formatAmount(actualValue)}원
                               </td>
                               <td
                                 className={`whitespace-nowrap p-2 text-right text-sm font-medium tabular-nums ${
