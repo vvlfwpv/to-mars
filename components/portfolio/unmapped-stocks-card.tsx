@@ -4,6 +4,7 @@ import { AlertTriangle } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { InvestmentSnapshotWithItems } from '@/types/investment'
 import type { PortfolioSectorWithTargets } from '@/types/portfolio'
+import { determineCurrency, convertToKRW, formatAmount } from '@/lib/utils/currency'
 
 type UnmappedStocksCardProps = {
   latestSnapshot: InvestmentSnapshotWithItems
@@ -30,12 +31,14 @@ export function UnmappedStocksCard({
     return null
   }
 
+  const exchangeRate = latestSnapshot.exchange_rate ?? null
+
   // 미분류 종목들의 총 비중
-  const unmappedTotalWeight = unmappedStocks.reduce(
-    (sum, item) =>
-      sum + (totalActualValue > 0 ? (Number(item.month_end_value) / totalActualValue) * 100 : 0),
-    0
-  )
+  const unmappedTotalWeight = unmappedStocks.reduce((sum, item) => {
+    const currency = determineCurrency(item)
+    const valueInKRW = convertToKRW(Number(item.month_end_value), currency, exchangeRate)
+    return sum + (totalActualValue > 0 ? (valueInKRW / totalActualValue) * 100 : 0)
+  }, 0)
 
   return (
     <Card className="border-amber-500/40 bg-amber-500/5 shadow-sm">
@@ -48,8 +51,9 @@ export function UnmappedStocksCard({
       <CardContent>
         <div className="space-y-2">
           {unmappedStocks.map((item) => {
-            const weight =
-              totalActualValue > 0 ? (Number(item.month_end_value) / totalActualValue) * 100 : 0
+            const currency = determineCurrency(item)
+            const valueInKRW = convertToKRW(Number(item.month_end_value), currency, exchangeRate)
+            const weight = totalActualValue > 0 ? (valueInKRW / totalActualValue) * 100 : 0
 
             return (
               <div
@@ -65,7 +69,7 @@ export function UnmappedStocksCard({
                 <div className="text-right">
                   <div className="font-semibold tabular-nums">{weight.toFixed(1)}%</div>
                   <div className="text-xs text-muted-foreground">
-                    {Number(item.month_end_value).toLocaleString()}원
+                    {formatAmount(valueInKRW)}원
                   </div>
                 </div>
               </div>

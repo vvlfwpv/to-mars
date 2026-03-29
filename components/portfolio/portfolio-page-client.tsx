@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import type { PortfolioSectorWithTargets } from '@/types/portfolio'
 import type { InvestmentSnapshotWithItems } from '@/types/investment'
+import { determineCurrency, convertToKRW } from '@/lib/utils/currency'
 import { PortfolioChart } from './portfolio-chart'
 import { SectorList } from './sector-list'
 import { UnmappedStocksCard } from './unmapped-stocks-card'
@@ -24,12 +25,14 @@ export function PortfolioPageClient({
   const [sectorDialogOpen, setSectorDialogOpen] = useState(false)
   const [editingSector, setEditingSector] = useState<PortfolioSectorWithTargets | null>(null)
 
-  // 실제 포트폴리오 총액 계산
+  const exchangeRate = latestSnapshot?.exchange_rate ?? null
+
+  // 실제 포트폴리오 총액 계산 (USD 항목은 KRW로 환산)
   const totalActualValue = latestSnapshot
-    ? latestSnapshot.investment_items.reduce(
-        (sum, item) => sum + Number(item.month_end_value),
-        0
-      )
+    ? latestSnapshot.investment_items.reduce((sum, item) => {
+        const currency = determineCurrency(item)
+        return sum + convertToKRW(Number(item.month_end_value), currency, exchangeRate)
+      }, 0)
     : 0
 
   // 목표 비중 합계
@@ -38,15 +41,19 @@ export function PortfolioPageClient({
     0
   )
 
-  // 실제 비중 계산을 위한 맵 생성
+  // 실제 비중 계산을 위한 맵 생성 (value는 KRW 환산 기준)
   const actualStockMap = new Map(
-    latestSnapshot?.investment_items.map((item) => [
-      item.code || '',
-      {
-        value: Number(item.month_end_value),
-        weight: totalActualValue > 0 ? (Number(item.month_end_value) / totalActualValue) * 100 : 0,
-      },
-    ]) || []
+    latestSnapshot?.investment_items.map((item) => {
+      const currency = determineCurrency(item)
+      const valueInKRW = convertToKRW(Number(item.month_end_value), currency, exchangeRate)
+      return [
+        item.code || '',
+        {
+          value: valueInKRW,
+          weight: totalActualValue > 0 ? (valueInKRW / totalActualValue) * 100 : 0,
+        },
+      ]
+    }) || []
   )
 
   // 실제 비중 합계 계산
